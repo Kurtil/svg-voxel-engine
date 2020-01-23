@@ -22,12 +22,12 @@ export default {
   props: {
     width: {
       type: Number,
-      default: 200
+      default: 500
     },
     height: {
       // TODO will the area be a square ???
       type: Number,
-      default: 200
+      default: 500
     },
     size: {
       type: Number,
