@@ -3,7 +3,7 @@ import App from "./App.vue";
 
 Vue.config.productionTip = false;
 
-new Vue({
+window.vm = new Vue({
   render: function(h) {
     return h(App);
   }
