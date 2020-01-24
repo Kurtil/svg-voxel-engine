@@ -159,11 +159,12 @@ export default {
       );
     },
     addFullSlab(stage = 1, color = "#00FF00", cfg) {
-      for (let x = 1; x <= this.size; x++) {
-        for (let y = 1; y <= this.size; y++) {
-          this.addVoxel({ x, y, z: stage }, color, cfg);
-        }
-      }
+      this.makeBox(
+        { x: 1, y: 1, z: stage },
+        color,
+        { xSize: this.size, ySize: this.size, zSize: 1 },
+        cfg
+      );
     },
     /**
      * Return the svg y coodrinate of the nth stage.
@@ -179,7 +180,7 @@ export default {
     makeBoxObject(position, color, sizes) {
       this.objects.push(this.makeBox(position, color, sizes));
     },
-    makeBox(position, color, { xSize = 1, ySize = 1, zSize = 1 }) {
+    makeBox(position, color, { xSize = 1, ySize = 1, zSize = 1 }, cfg) {
       const box = {
         voxels: []
       };
@@ -190,7 +191,7 @@ export default {
             const voxel = this.addVoxel(
               { x: x + dx, y: y + dy, z: z + dz },
               color,
-              undefined,
+              cfg,
               box
             );
             box.voxels.push(voxel);
