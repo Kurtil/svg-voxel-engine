@@ -45,7 +45,7 @@ export default {
     },
     size: {
       type: Number,
-      default: 20
+      default: 32
     },
     rise: {
       type: Number,
@@ -82,44 +82,49 @@ export default {
       this.addGrid();
     }
 
-    this.addVoxel({ x: 2, y: 2, z: 1 });
-    this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
-    this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
-    this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
-    this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
-    this.addVoxel({ x: 2, y: 2, z: 3 });
-    this.addVoxel({ x: 2, y: 2, z: 5 });
-    this.addVoxel({ x: 2, y: 2, z: 7 });
+    this.addFullSlab(1, "#35EF7E");
+    this.addFullSlab(2, "#35EF7E");
+    this.addFullSlab(3, "#94979A", { offset: 5 });
+    this.addFullSlab(4, "#94979A", { offset: 5 });
 
-    this.makeBoxObject({ x: 8, y: 8, z: 1 }, "#A73852", {
-      xSize: 8,
-      ySize: 7,
-      zSize: 8
-    });
+    // this.makeBoxObject({ x: 2, y: 2, z: 2 }, "#94979A", {
+    //   xSize: this.size - 2,
+    //   ySize: 7,
+    //   zSize: 8
+    // });
 
-    this.deleteBox(
-      { x: 9, y: 8, z: 1 },
-      {
-        xSize: 6,
-        ySize: 8,
-        zSize: 7
-      }
-    );
+    // this.addVoxel({ x: 2, y: 2, z: 1 });
+    // this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
+    // this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
+    // this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
+    // this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
+    // this.addVoxel({ x: 2, y: 2, z: 3 });
+    // this.addVoxel({ x: 2, y: 2, z: 5 });
+    // this.addVoxel({ x: 2, y: 2, z: 7 });
 
-    this.deleteBox(
-      { x: 8, y: 9, z: 1 },
-      {
-        xSize: 8,
-        ySize: 5,
-        zSize: 7
-      }
-    );
+    // this.deleteBox(
+    //   { x: 9, y: 8, z: 1 },
+    //   {
+    //     xSize: 6,
+    //     ySize: 8,
+    //     zSize: 7
+    //   }
+    // );
 
-    this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
-      xSize: 5,
-      ySize: 3,
-      zSize: 10
-    });
+    // this.deleteBox(
+    //   { x: 8, y: 9, z: 1 },
+    //   {
+    //     xSize: 8,
+    //     ySize: 5,
+    //     zSize: 7
+    //   }
+    // );
+
+    // this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
+    //   xSize: 5,
+    //   ySize: 3,
+    //   zSize: 10
+    // });
 
     this.removeDusplicatedVoxelIds();
   },
@@ -223,11 +228,19 @@ export default {
       );
       return true;
     },
-    addFullSlab(stage = 1, color = "#00FF00", cfg) {
-      this.makeBox(
-        { x: 1, y: 1, z: stage },
+    makeFullSlabObject(stage = 1, color = "#00FF00", cfg) {
+      this.objects.push(this.addFullSlab(stage, color, cfg));
+    },
+    addFullSlab(stage = 1, color = "#00FF00", cfg = {}) {
+      const { offset = 0 } = cfg;
+      return this.makeBox(
+        { x: 1 + offset, y: 1 + offset, z: stage },
         color,
-        { xSize: this.size, ySize: this.size, zSize: 1 },
+        {
+          xSize: this.size - 2 * offset,
+          ySize: this.size - 2 * offset,
+          zSize: 1
+        },
         cfg
       );
     },
@@ -338,7 +351,7 @@ export default {
         lightFace = "up",
         lightHue = 5,
         shadow = 30,
-        shadowFace = "left",
+        shadowFace = "right",
         shadowHue = 20
       } = this.lightCfg;
       if (face === lightFace) {
