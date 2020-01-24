@@ -2,7 +2,13 @@
   <div class="svgVoxelEngine">
     <svg :width="width" :height="height" :viewBox="viewBox">
       <rect width="100%" height="100%" fill="gray" />
-      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.svgPath" />
+      <g
+        v-for="voxel of sortedVoxels"
+        :key="voxel.id"
+        v-html="voxel.svgPath"
+        @click.exact="deleteVoxel(voxel)"
+        @click.alt="clear(voxel)"
+      />
     </svg>
   </div>
 </template>
@@ -14,7 +20,8 @@ export default {
   name: "SvgVoxelEngine",
   data() {
     return {
-      voxels: []
+      voxels: [],
+      objects: []
     };
   },
   props: {
@@ -69,7 +76,7 @@ export default {
     this.addVoxel({ x: 2, y: 2, z: 5 });
     this.addVoxel({ x: 2, y: 2, z: 7 });
 
-    this.makeBox({ x: 10, y: 10, z: 1 }, "#EE82EE", {
+    this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
       xSize: 5,
       ySize: 3,
       zSize: 10
@@ -114,6 +121,21 @@ export default {
     }
   },
   methods: {
+    /**
+     * Remove the voxel and all its siblings if it belongs to an object
+     */
+    clear(voxel = {}) {
+      const voxelsToRemove = voxel.parent ? voxel.parent.voxels : [voxel];
+      this.deleteVoxels(voxelsToRemove);
+    },
+    deleteVoxel(voxel) {
+      this.deleteVoxels([voxel]);
+    },
+    deleteVoxels(voxelsToRemove) {
+      this.voxels = this.voxels.filter(
+        voxel => !voxelsToRemove.includes(voxel)
+      );
+    },
     addFullSlab(stage = 1, color = "#00FF00") {
       for (let x = 1; x <= this.size; x++) {
         for (let y = 1; y <= this.size; y++) {
@@ -132,24 +154,40 @@ export default {
           (stage - 1) * this.voxelYSize)
       );
     },
+    makeBoxObject(position, color, sizes) {
+      this.objects.push(this.makeBox(position, color, sizes));
+    },
     makeBox(position, color, { xSize = 1, ySize = 1, zSize = 1 }) {
+      const box = {
+        voxels: []
+      };
       const { x, y, z } = position;
       for (let dx = 0; dx < xSize; dx++) {
         for (let dy = 0; dy < ySize; dy++) {
           for (let dz = 0; dz < zSize; dz++) {
-            this.addVoxel({ x: x + dx, y: y + dy, z: z + dz }, color);
+            const voxel = this.addVoxel(
+              { x: x + dx, y: y + dy, z: z + dz },
+              color,
+              undefined,
+              box
+            );
+            box.voxels.push(voxel);
           }
         }
       }
+      return box;
     },
-    addVoxel(position, color = "#FF0000", cfg) {
-      this.voxels.push(this.makeFullVoxel(position, color, cfg));
+    addVoxel(position, color = "#FF0000", cfg, parent) {
+      const voxel = this.makeFullVoxel(position, color, cfg, parent);
+      this.voxels.push(voxel);
+      return voxel;
     },
-    makeFullVoxel(position, color, cfg) {
+    makeFullVoxel(position, color, cfg, parent = null) {
       return {
         id: `voxel-x${position.x}-y${position.y}-z${position.z}`,
         svgPath: this.makeVoxelSvgPath(position, color, cfg),
-        zIndex: this.getZIndex(position)
+        zIndex: this.getZIndex(position),
+        parent
       };
     },
     getZIndex(position) {
