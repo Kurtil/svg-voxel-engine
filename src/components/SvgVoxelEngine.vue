@@ -241,6 +241,8 @@ export default {
     makeFullVoxel(position, color, cfg, parent = null) {
       return {
         id: this.generateId(position),
+        position,
+        color,
         svgPath: this.makeVoxelSvgPath(position, color, cfg),
         zIndex: this.getZIndex(position),
         parent
@@ -264,21 +266,24 @@ export default {
         ? this.makeSvgPath(
             this.makeFacePath([p5, p6, p7, p8]),
             this.makeFaceColor("up", color),
-            stroke
+            stroke,
+            'face="up"'
           )
         : "";
       const rightFaceSvgPath = rightFace
         ? this.makeSvgPath(
-            this.makeFacePath([p1, p5, p8, p4]),
+            this.makeFacePath([p8, p7, p3, p4]),
             this.makeFaceColor("right", color),
-            stroke
+            stroke,
+            'face="right"'
           )
         : "";
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
-            this.makeFacePath([p8, p7, p3, p4]),
+            this.makeFacePath([p1, p5, p8, p4]),
             this.makeFaceColor("left", color),
-            stroke
+            stroke,
+            'face="left"'
           )
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
@@ -303,8 +308,10 @@ export default {
         return color;
       }
     },
-    makeSvgPath(path, color, stroke) {
-      return `<path d="${path}" ${stroke ? "stroke" : "fill"}="${color}" />`;
+    makeSvgPath(path, color, stroke, args = "") {
+      return `<path d="${path}" ${
+        stroke ? "stroke" : "fill"
+      }="${color}" ${args}/>`;
     },
     darkenColor(color, amount) {
       return lightenColor(color, -amount);
