@@ -1,6 +1,6 @@
 <template>
   <div class="svgVoxelEngine">
-    <svg :width="width" :height="height" :viewBox="viewBox">
+    <svg :width="width" :height="height" :viewBox="viewBox" fill="transparent">
       <rect width="100%" height="100%" fill="gray" />
       <g
         v-for="voxel of sortedVoxels"
@@ -64,9 +64,11 @@ export default {
   },
   created() {
     window.engine = this; // TODO for development only
+
     if (this.grid) {
-      this.addFullSlab(0, "#21C786");
+      this.addGrid();
     }
+
     this.addVoxel({ x: 2, y: 2, z: 1 });
     this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
     this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
@@ -129,6 +131,13 @@ export default {
     }
   },
   methods: {
+    addGrid() {
+      this.addFullSlab(0, "#777777", {
+        stroke: true,
+        leftFace: false,
+        rightFace: false
+      });
+    },
     removeDusplicatedVoxelIds() {
       const uniqueIds = new Map();
       this.sortedVoxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
@@ -149,10 +158,10 @@ export default {
         voxel => !voxelsToRemove.includes(voxel)
       );
     },
-    addFullSlab(stage = 1, color = "#00FF00") {
+    addFullSlab(stage = 1, color = "#00FF00", cfg) {
       for (let x = 1; x <= this.size; x++) {
         for (let y = 1; y <= this.size; y++) {
-          this.addVoxel({ x, y, z: stage }, color);
+          this.addVoxel({ x, y, z: stage }, color, cfg);
         }
       }
     },
@@ -211,25 +220,28 @@ export default {
     makeVoxelSvgPath(
       position,
       color,
-      { rightFace = true, leftFace = true, upFace = true } = {}
+      { rightFace = true, leftFace = true, upFace = true, stroke = false } = {}
     ) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       const upFaceSvgPath = upFace
         ? this.makeSvgPath(
             this.makeFacePath([p5, p6, p7, p8]),
-            this.makeFaceColor("up", color)
+            this.makeFaceColor("up", color),
+            stroke
           )
         : "";
       const rightFaceSvgPath = rightFace
         ? this.makeSvgPath(
             this.makeFacePath([p1, p5, p8, p4]),
-            this.makeFaceColor("right", color)
+            this.makeFaceColor("right", color),
+            stroke
           )
         : "";
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
             this.makeFacePath([p8, p7, p3, p4]),
-            this.makeFaceColor("left", color)
+            this.makeFaceColor("left", color),
+            stroke
           )
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
@@ -254,8 +266,8 @@ export default {
         return color;
       }
     },
-    makeSvgPath(path, color) {
-      return `<path d="${path}" fill="${color}" />`;
+    makeSvgPath(path, color, stroke) {
+      return `<path d="${path}" ${stroke ? "stroke" : "fill"}="${color}" />`;
     },
     darkenColor(color, amount) {
       return lightenColor(color, -amount);
