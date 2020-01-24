@@ -88,6 +88,24 @@ export default {
       zSize: 8
     });
 
+    this.deleteBox(
+      { x: 9, y: 8, z: 1 },
+      {
+        xSize: 6,
+        ySize: 8,
+        zSize: 7
+      }
+    );
+
+    this.deleteBox(
+      { x: 8, y: 9, z: 1 },
+      {
+        xSize: 8,
+        ySize: 5,
+        zSize: 7
+      }
+    );
+
     this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
       xSize: 5,
       ySize: 3,
@@ -158,9 +176,11 @@ export default {
       this.deleteVoxels([voxel]);
     },
     deleteVoxels(voxelsToRemove) {
+      if (!voxelsToRemove || !voxelsToRemove.length) return false;
       this.voxels = this.voxels.filter(
         voxel => !voxelsToRemove.includes(voxel)
       );
+      return true;
     },
     addFullSlab(stage = 1, color = "#00FF00", cfg) {
       this.makeBox(
@@ -181,28 +201,37 @@ export default {
           (stage - 1) * this.voxelYSize)
       );
     },
+    getVoxelAt(position) {
+      return this.voxels.find(voxel => voxel.id === this.generateId(position));
+    },
     makeBoxObject(position, color, sizes) {
       this.objects.push(this.makeBox(position, color, sizes));
     },
-    makeBox(position, color, { xSize = 1, ySize = 1, zSize = 1 }, cfg) {
+    deleteBox(position, sizes) {
+      this.getBoxCoordinates(position, sizes).forEach(point =>
+        this.deleteVoxel(this.getVoxelAt(point))
+      );
+    },
+    makeBox(position, color, sizes, cfg) {
       const box = {
         voxels: []
       };
+      this.getBoxCoordinates(position, sizes).forEach(point =>
+        box.voxels.push(this.addVoxel(point, color, cfg, box))
+      );
+      return box;
+    },
+    getBoxCoordinates(position, { xSize = 1, ySize = 1, zSize = 1 }) {
       const { x, y, z } = position;
+      const boxCoordinates = [];
       for (let dx = 0; dx < xSize; dx++) {
         for (let dy = 0; dy < ySize; dy++) {
           for (let dz = 0; dz < zSize; dz++) {
-            const voxel = this.addVoxel(
-              { x: x + dx, y: y + dy, z: z + dz },
-              color,
-              cfg,
-              box
-            );
-            box.voxels.push(voxel);
+            boxCoordinates.push({ x: x + dx, y: y + dy, z: z + dz });
           }
         }
       }
-      return box;
+      return boxCoordinates;
     },
     addVoxel(position, color = "#FF0000", cfg, parent) {
       const voxel = this.makeFullVoxel(position, color, cfg, parent);
@@ -211,11 +240,14 @@ export default {
     },
     makeFullVoxel(position, color, cfg, parent = null) {
       return {
-        id: `voxel-x${position.x}-y${position.y}-z${position.z}`,
+        id: this.generateId(position),
         svgPath: this.makeVoxelSvgPath(position, color, cfg),
         zIndex: this.getZIndex(position),
         parent
       };
+    },
+    generateId(position) {
+      return `voxel-x${position.x}-y${position.y}-z${position.z}`;
     },
     getZIndex(position) {
       const { x, y, z } = position;
