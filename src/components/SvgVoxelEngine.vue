@@ -6,8 +6,9 @@
         v-for="voxel of sortedVoxels"
         :key="voxel.id"
         v-html="voxel.svgPath"
-        @click.exact="deleteVoxel(voxel)"
+        @click.meta="deleteVoxel(voxel)"
         @click.alt="clear(voxel)"
+        @click.exact="addCloneVoxel($event, voxel)"
       />
     </svg>
   </div>
@@ -153,6 +154,17 @@ export default {
     }
   },
   methods: {
+    addCloneVoxel(clickEvent, voxel) {
+      const face = clickEvent.target.getAttribute("face");
+      if (!face || !["up", "right", "left"].includes(face)) return;
+      const { x, y, z } = voxel.position;
+      const newVoxelPosition = {
+        x: x + (face === "right" ? 1 : 0),
+        y: y - (face === "left" ? 1 : 0),
+        z: z + (face === "up" ? 1 : 0)
+      };
+      this.addVoxel(newVoxelPosition, voxel.color);
+    },
     addGrid() {
       this.addFullSlab(0, this.gridColor, {
         stroke: true,
