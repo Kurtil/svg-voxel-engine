@@ -2,7 +2,7 @@
   <div class="svgVoxelEngine">
     <svg :width="width" :height="height" :viewBox="viewBox">
       <rect width="100%" height="100%" fill="gray" />
-      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.path" />
+      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.svgPath" />
     </svg>
   </div>
 </template>
@@ -120,13 +120,13 @@ export default {
           (stage - 1) * this.voxelYSize)
       );
     },
-    addVoxel(position, color = "#FF0000") {
-      this.voxels.push(this.makeFullVoxel(position, color));
+    addVoxel(position, color = "#FF0000", cfg) {
+      this.voxels.push(this.makeFullVoxel(position, color, cfg));
     },
-    makeFullVoxel(position, color) {
+    makeFullVoxel(position, color, cfg) {
       return {
         id: `voxel-x${position.x}-y${position.y}-z${position.z}`,
-        path: this.makeFullVoxelPath(position, color),
+        svgPath: this.makeVoxelSvgPath(position, color, cfg),
         zIndex: this.getZIndex(position)
       };
     },
@@ -135,23 +135,31 @@ export default {
       const maxPerStage = z * (this.size * 2 - 1);
       return maxPerStage - (this.size - x) - (y - 1);
     },
-    makeFullVoxelPath(position, color) {
+    makeVoxelSvgPath(
+      position,
+      color,
+      { rightFace = true, leftFace = true, upFace = true } = {}
+    ) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
-      return `
-      <g>
-        <path d="${this.makeFace([p5, p6, p7, p8])}" fill="${this.lightenColor(
-        color,
-        10
-      )}"></path>
-        <path d="${this.makeFace([p1, p5, p8, p4])}" fill="${this.lightenColor(
-        color,
-        10
-      )}"></path>
-        <path d="${this.makeFace([p8, p7, p3, p4])}" fill="${this.darkenColor(
-        color,
-        40
-      )}"></path>
-      </g>`;
+      const upFaceSvgPath = upFace
+        ? this.makeSvgPath(this.makeFacePath([p5, p6, p7, p8]), color)
+        : "";
+      const rightFaceSvgPath = rightFace
+        ? this.makeSvgPath(
+            this.makeFacePath([p1, p5, p8, p4]),
+            this.lightenColor(color, 10)
+          )
+        : "";
+      const leftFaceSvgPath = leftFace
+        ? this.makeSvgPath(
+            this.makeFacePath([p8, p7, p3, p4]),
+            this.darkenColor(color, 40)
+          )
+        : "";
+      return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
+    },
+    makeSvgPath(path, color) {
+      return `<path d="${path}" fill="${color}" />`;
     },
     darkenColor(color, amount) {
       return this.lightenColor(color, -amount);
@@ -177,7 +185,7 @@ export default {
           .slice(1)
       );
     },
-    makeFace(points) {
+    makeFacePath(points) {
       const [p1, p2, p3, p4] = points;
       return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
     },
