@@ -43,6 +43,10 @@ export default {
       type: Boolean,
       default: true
     },
+    lightCfg: {
+      type: Object,
+      default: () => ({})
+    },
     /**
      * Offset of voxel on the svg-x axis
      */
@@ -158,11 +162,17 @@ export default {
       color,
       { rightFace = true, leftFace = true, upFace = true } = {}
     ) {
+      const {
+        light = 10,
+        lightHue = 5,
+        shadow = 40,
+        shadowHue = 20
+      } = this.lightCfg;
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       const upFaceSvgPath = upFace
         ? this.makeSvgPath(
             this.makeFacePath([p5, p6, p7, p8]),
-            lightenColor(hueShift(color, 5), 10)
+            lightenColor(hueShift(color, lightHue), light)
           )
         : "";
       const rightFaceSvgPath = rightFace
@@ -171,7 +181,7 @@ export default {
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
             this.makeFacePath([p8, p7, p3, p4]),
-            this.darkenColor(hueShift(color, 20), 40)
+            this.darkenColor(hueShift(color, shadowHue), shadow)
           )
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
