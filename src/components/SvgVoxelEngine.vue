@@ -139,9 +139,18 @@ export default {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       return `
       <g>
-        ${this.makeFace([p5, p6, p7, p8], this.lightenColor(color, 10))}
-        ${this.makeFace([p1, p5, p8, p4], color)}
-        ${this.makeFace([p8, p7, p3, p4], this.darkenColor(color, 40))}
+        <path d="${this.makeFace([p5, p6, p7, p8])}" fill="${this.lightenColor(
+        color,
+        10
+      )}"></path>
+        <path d="${this.makeFace([p1, p5, p8, p4])}" fill="${this.lightenColor(
+        color,
+        10
+      )}"></path>
+        <path d="${this.makeFace([p8, p7, p3, p4])}" fill="${this.darkenColor(
+        color,
+        40
+      )}"></path>
       </g>`;
     },
     darkenColor(color, amount) {
@@ -168,9 +177,9 @@ export default {
           .slice(1)
       );
     },
-    makeFace(points, color) {
+    makeFace(points) {
       const [p1, p2, p3, p4] = points;
-      return `<path d="M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z" fill="${color}"></path>`;
+      return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
     },
     /**
      * Returns the coordinates of the voxel.
