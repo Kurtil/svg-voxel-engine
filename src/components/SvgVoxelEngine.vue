@@ -213,29 +213,46 @@ export default {
       color,
       { rightFace = true, leftFace = true, upFace = true } = {}
     ) {
-      const {
-        light = 10,
-        lightHue = 5,
-        shadow = 40,
-        shadowHue = 20
-      } = this.lightCfg;
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       const upFaceSvgPath = upFace
         ? this.makeSvgPath(
             this.makeFacePath([p5, p6, p7, p8]),
-            lightenColor(hueShift(color, lightHue), light)
+            this.makeFaceColor("up", color)
           )
         : "";
       const rightFaceSvgPath = rightFace
-        ? this.makeSvgPath(this.makeFacePath([p1, p5, p8, p4]), color)
+        ? this.makeSvgPath(
+            this.makeFacePath([p1, p5, p8, p4]),
+            this.makeFaceColor("right", color)
+          )
         : "";
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
             this.makeFacePath([p8, p7, p3, p4]),
-            this.darkenColor(hueShift(color, shadowHue), shadow)
+            this.makeFaceColor("left", color)
           )
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
+    },
+    /**
+     * Lighten or darken face sepending on light configuration
+     */
+    makeFaceColor(face, color) {
+      const {
+        light = 10,
+        lightFace = "up",
+        lightHue = 5,
+        shadow = 30,
+        shadowFace = "left",
+        shadowHue = 20
+      } = this.lightCfg;
+      if (face === lightFace) {
+        return lightenColor(hueShift(color, lightHue), light);
+      } else if (face === shadowFace) {
+        return this.darkenColor(hueShift(color, shadowHue), shadow);
+      } else {
+        return color;
+      }
     },
     makeSvgPath(path, color) {
       return `<path d="${path}" fill="${color}" />`;
