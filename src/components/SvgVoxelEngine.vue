@@ -196,7 +196,7 @@ export default {
      */
     getVoxelCoordinates(position) {
       const origin = this.getVoxelOrigin(position);
-      const bottomFaceCoordinates = this.makeFaceCoordinates(origin);
+      const bottomFaceCoordinates = this.makeHorizontalFaceCoordinates(origin);
       return [
         ...bottomFaceCoordinates,
         ...bottomFaceCoordinates.map(({ x, y }) => ({
@@ -206,9 +206,9 @@ export default {
       ];
     },
     /**
-     * Return 4 points (face) from an origin point (voxel x0 y0)
+     * Return 4 points (up face) from an origin point (voxel x0 y0)
      */
-    makeFaceCoordinates(origin) {
+    makeHorizontalFaceCoordinates(origin) {
       const { x, y } = origin;
       return [
         { x, y },
