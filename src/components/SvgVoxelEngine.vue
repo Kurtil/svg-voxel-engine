@@ -8,6 +8,8 @@
 </template>
 
 <script>
+import { lightenColor, hueShift } from "../utils/colors.js";
+
 export default {
   name: "SvgVoxelEngine",
   data() {
@@ -160,7 +162,7 @@ export default {
       const upFaceSvgPath = upFace
         ? this.makeSvgPath(
             this.makeFacePath([p5, p6, p7, p8]),
-            this.lightenColor(color, 10)
+            lightenColor(hueShift(color, 5), 10)
           )
         : "";
       const rightFaceSvgPath = rightFace
@@ -169,7 +171,7 @@ export default {
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
             this.makeFacePath([p8, p7, p3, p4]),
-            this.darkenColor(color, 40)
+            this.darkenColor(hueShift(color, 20), 40)
           )
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
@@ -178,28 +180,7 @@ export default {
       return `<path d="${path}" fill="${color}" />`;
     },
     darkenColor(color, amount) {
-      return this.lightenColor(color, -amount);
-    },
-    /**
-     * From https://gist.github.com/renancouto/4675192
-     */
-    lightenColor(color, percent) {
-      const num = parseInt(color.replace("#", ""), 16);
-      const amt = Math.round(2.55 * percent);
-      const R = (num >> 16) + amt;
-      const B = ((num >> 8) & 0x00ff) + amt;
-      const G = (num & 0x0000ff) + amt;
-      return (
-        "#" +
-        (
-          0x1000000 +
-          (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-          (B < 255 ? (B < 1 ? 0 : B) : 255) * 0x100 +
-          (G < 255 ? (G < 1 ? 0 : G) : 255)
-        )
-          .toString(16)
-          .slice(1)
-      );
+      return lightenColor(color, -amount);
     },
     makeFacePath(points) {
       const [p1, p2, p3, p4] = points;
