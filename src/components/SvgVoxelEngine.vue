@@ -2,11 +2,7 @@
   <div class="svgVoxelEngine">
     <svg :width="width" :height="height" :viewBox="viewBox">
       <rect width="100%" height="100%" fill="gray" />
-      <g
-        v-for="voxel of sortedVoxels"
-        :key="voxel.position"
-        v-html="voxel.path"
-      ></g>
+      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.path" />
     </svg>
   </div>
 </template>
@@ -129,6 +125,7 @@ export default {
     },
     makeFullVoxel(position, color) {
       return {
+        id: `voxel-x${position.x}-y${position.y}-z${position.z}`,
         path: this.makeFullVoxelPath(position, color),
         zIndex: this.getZIndex(position)
       };
