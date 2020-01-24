@@ -50,6 +50,10 @@ export default {
       type: Boolean,
       default: true
     },
+    gridColor: {
+      type: String,
+      default: "#777777"
+    },
     lightCfg: {
       type: Object,
       default: () => ({})
@@ -132,7 +136,7 @@ export default {
   },
   methods: {
     addGrid() {
-      this.addFullSlab(0, "#777777", {
+      this.addFullSlab(0, this.gridColor, {
         stroke: true,
         leftFace: false,
         rightFace: false
