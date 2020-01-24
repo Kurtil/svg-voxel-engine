@@ -230,17 +230,6 @@ export default {
           (1 / 2) * this.voxelYSize * (x - 1) -
           (1 / 2) * this.voxelYSize * (y - 1)
       };
-    },
-    makePoint(x, y) {
-      return { x, y };
-    },
-    addUpFace() {
-      // const { x, y, z } = position;
-    },
-    fullLayer() {
-      return `M${0} ${(200 / 2) * this.depthRatio}L${200 / 2} ${0 *
-        this.depthRatio}L${200} ${(200 / 2) * this.depthRatio}L${200 /
-        2} ${200 * this.depthRatio}Z`;
     }
   }
 };
