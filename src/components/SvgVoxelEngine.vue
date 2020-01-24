@@ -9,6 +9,13 @@
         @click.meta="deleteVoxel(voxel)"
         @click.alt="clear(voxel)"
         @click.exact="addCloneVoxel($event, voxel)"
+        @mouseover="hoverVoxel($event, voxel)"
+      />
+      <g
+        v-for="voxel of miscVoxels"
+        :key="voxel.id"
+        v-html="voxel.svgPath"
+        style="pointer-events: none;"
       />
     </svg>
   </div>
@@ -22,6 +29,7 @@ export default {
   data() {
     return {
       voxels: [],
+      miscVoxels: [],
       objects: []
     };
   },
@@ -154,16 +162,37 @@ export default {
     }
   },
   methods: {
-    addCloneVoxel(clickEvent, voxel) {
-      const face = clickEvent.target.getAttribute("face");
-      if (!face || !["up", "right", "left"].includes(face)) return;
-      const { x, y, z } = voxel.position;
-      const newVoxelPosition = {
+    hoverVoxel(event, voxel) {
+      let position = null;
+      if (event.metaKey) {
+        position = voxel.position;
+      } else {
+        const face = event.target.getAttribute("face");
+        if (!face || !["up", "right", "left"].includes(face)) return;
+        position = this.getFaceNeighbourPoition(voxel.position, face);
+      }
+      const hvoxel = this.makeFullVoxel(position, "#FFFFFF", {
+        stroke: true
+      });
+      hvoxel.id = "X" + hvoxel.id;
+      this.miscVoxels = [hvoxel];
+    },
+    getFaceNeighbourPoition(position, face) {
+      const { x, y, z } = position;
+      return {
         x: x + (face === "right" ? 1 : 0),
         y: y - (face === "left" ? 1 : 0),
         z: z + (face === "up" ? 1 : 0)
       };
-      this.addVoxel(newVoxelPosition, voxel.color);
+    },
+    addCloneVoxel(clickEvent, voxel) {
+      const face = clickEvent.target.getAttribute("face");
+      if (!face || !["up", "right", "left"].includes(face)) return;
+
+      this.addVoxel(
+        this.getFaceNeighbourPoition(voxel.position, face),
+        voxel.color
+      );
     },
     addGrid() {
       this.addFullSlab(0, this.gridColor, {
