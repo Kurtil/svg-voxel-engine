@@ -76,11 +76,19 @@ export default {
     this.addVoxel({ x: 2, y: 2, z: 5 });
     this.addVoxel({ x: 2, y: 2, z: 7 });
 
+    this.makeBoxObject({ x: 8, y: 8, z: 1 }, "#A73852", {
+      xSize: 8,
+      ySize: 7,
+      zSize: 8
+    });
+
     this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
       xSize: 5,
       ySize: 3,
       zSize: 10
     });
+
+    this.removeDusplicatedVoxelIds();
   },
   computed: {
     sortedVoxels() {
@@ -121,6 +129,11 @@ export default {
     }
   },
   methods: {
+    removeDusplicatedVoxelIds() {
+      const uniqueIds = new Map();
+      this.sortedVoxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
+      this.voxels = [...uniqueIds.values()];
+    },
     /**
      * Remove the voxel and all its siblings if it belongs to an object
      */
