@@ -62,6 +62,12 @@ export default {
     this.addVoxel({ x: 2, y: 2, z: 3 });
     this.addVoxel({ x: 2, y: 2, z: 5 });
     this.addVoxel({ x: 2, y: 2, z: 7 });
+
+    this.makeBox({ x: 10, y: 10, z: 1 }, "#EE82EE", {
+      xSize: 5,
+      ySize: 3,
+      zSize: 10
+    });
   },
   computed: {
     sortedVoxels() {
@@ -119,6 +125,16 @@ export default {
           this.offset +
           (stage - 1) * this.voxelYSize)
       );
+    },
+    makeBox(position, color, { xSize = 1, ySize = 1, zSize = 1 }) {
+      const { x, y, z } = position;
+      for (let dx = 0; dx < xSize; dx++) {
+        for (let dy = 0; dy < ySize; dy++) {
+          for (let dz = 0; dz < zSize; dz++) {
+            this.addVoxel({ x: x + dx, y: y + dy, z: z + dz }, color);
+          }
+        }
+      }
     },
     addVoxel(position, color = "#FF0000", cfg) {
       this.voxels.push(this.makeFullVoxel(position, color, cfg));
