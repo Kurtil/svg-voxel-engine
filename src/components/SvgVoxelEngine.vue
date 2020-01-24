@@ -142,13 +142,13 @@ export default {
     ) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       const upFaceSvgPath = upFace
-        ? this.makeSvgPath(this.makeFacePath([p5, p6, p7, p8]), color)
-        : "";
-      const rightFaceSvgPath = rightFace
         ? this.makeSvgPath(
-            this.makeFacePath([p1, p5, p8, p4]),
+            this.makeFacePath([p5, p6, p7, p8]),
             this.lightenColor(color, 10)
           )
+        : "";
+      const rightFaceSvgPath = rightFace
+        ? this.makeSvgPath(this.makeFacePath([p1, p5, p8, p4]), color)
         : "";
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
