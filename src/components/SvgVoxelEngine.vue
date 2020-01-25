@@ -5,18 +5,30 @@
       <g
         v-for="voxel of sortedVoxels"
         :key="voxel.id"
-        v-html="voxel.svgPath"
         @click.meta="deleteVoxel(voxel)"
         @click.alt="clear(voxel)"
         @click.exact="addCloneVoxel($event, voxel)"
         @mouseover="hoverVoxel($event, voxel)"
-      />
-      <g
+      >
+        <path
+          v-for="voxelPath of voxel.voxelPaths"
+          :key="voxelPath.path"
+          :d="voxelPath.path"
+          :fill="voxelPath.color"
+        />
+      </g>
+      <!-- <g
         v-for="voxel of miscVoxels"
         :key="voxel.id"
-        v-html="voxel.svgPath"
         style="pointer-events: none;"
-      />
+      >
+        <path
+          v-for="voxelPath of voxel.voxelPaths"
+          :key="voxelPath.path"
+          :d="voxelPath.path"
+          :fill="voxelPath.color"
+        />
+      </g> -->
     </svg>
   </div>
 </template>
@@ -82,10 +94,10 @@ export default {
       this.addGrid();
     }
 
-    this.addFullSlab(1, "#35EF7E");
-    this.addFullSlab(2, "#35EF7E");
-    this.addFullSlab(3, "#94979A", { offset: 5 });
-    this.addFullSlab(4, "#94979A", { offset: 5 });
+    this.makeFullSlabObject(1, "#35EF7E");
+    this.makeFullSlabObject(2, "#35EF7E");
+    this.makeFullSlabObject(3, "#94979A", { offset: 5 });
+    this.makeFullSlabObject(4, "#94979A", { offset: 5 });
 
     // this.makeBoxObject({ x: 2, y: 2, z: 2 }, "#94979A", {
     //   xSize: this.size - 2,
@@ -93,7 +105,7 @@ export default {
     //   zSize: 8
     // });
 
-    // this.addVoxel({ x: 2, y: 2, z: 1 });
+    this.addVoxel({ x: 10, y: 10, z: 6 }, "#FF0000");
     // this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
     // this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
     // this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
@@ -126,6 +138,9 @@ export default {
     //   zSize: 10
     // });
 
+    // this.mergeObjects();
+    // this.mergeColors();
+    this.newMergeColors();
     this.removeDusplicatedVoxelIds();
   },
   computed: {
@@ -167,6 +182,61 @@ export default {
     }
   },
   methods: {
+    newMergeColors() {
+      const colors = new Map();
+      const voxelPaths = this.voxels.flatMap(voxel => voxel.voxelPaths);
+      voxelPaths.forEach(voxelPath => {
+        if (colors.has(voxelPath.color)) {
+          colors.get(voxelPath.color).push(voxelPath.path);
+        } else {
+          colors.set(voxelPath.color, [voxelPath.path]);
+        }
+      });
+      this.voxels = []; // TODO - it will delete grid too
+      let index = 0;
+      colors.forEach((paths, color) => {
+        const path = paths.reduce((acc, cur) => acc + cur, "");
+        this.voxels.push({
+          id: `color-object-${color}`,
+          svgPath: `<path d="${path}" fill="${color}"/>`,
+          voxelPaths: [{ path, color }],
+          zIndex: index++
+        });
+      });
+    },
+    mergeColors() {
+      const colors = new Map();
+      this.voxels.forEach(voxel => {
+        if (colors.has(voxel.color)) {
+          colors.get(voxel.color).push(...voxel.paths);
+        } else {
+          colors.set(voxel.color, [...voxel.paths]);
+        }
+      });
+      this.voxels = []; // TODO - it will delete grid too
+      colors.forEach((paths, color) => {
+        const path = paths.reduce((acc, cur) => acc + cur, "");
+        this.voxels.push({
+          id: `color-object-${color}`,
+          svgPath: `<path d="${path}" fill="${color}"/>`,
+          zIndex: 0
+        });
+      });
+    },
+    mergeObjects() {
+      this.objects.forEach((object, index) => {
+        const voxels = object.voxels;
+        this.deleteVoxels(voxels);
+        const path = voxels
+          .flatMap(voxel => voxel.paths.flatMap(path => path))
+          .reduce((acc, cur) => acc + cur, "");
+        this.voxels.push({
+          id: `object-${index}`,
+          voxelPath: `<path d="${path}" fill="${voxels[0].color}"/>`,
+          zIndex: index
+        });
+      });
+    },
     hoverVoxel(event, voxel) {
       let position = null;
       if (event.metaKey) {
@@ -293,13 +363,16 @@ export default {
       return voxel;
     },
     makeFullVoxel(position, color, cfg, parent = null) {
+      const paths = [];
       return {
         id: this.generateId(position),
         position,
         color,
-        svgPath: this.makeVoxelSvgPath(position, color, cfg),
+        svgPath: this.makeVoxelSvgPath(position, color, cfg, paths),
+        voxelPaths: this.makeVoxelPaths(position, color, cfg, paths),
         zIndex: this.getZIndex(position),
-        parent
+        parent,
+        paths
       };
     },
     generateId(position) {
@@ -310,15 +383,45 @@ export default {
       const maxPerStage = z * (this.size * 2 - 1);
       return maxPerStage - (this.size - x) - (y - 1);
     },
+    makeVoxelPaths(
+      position,
+      color
+      // { rightFace = true, leftFace = true, upFace = true, stroke = false } = {}
+    ) {
+      const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
+      const paths = [];
+      // TODO we loose face information
+      paths.push(
+        {
+          path: this.makeFacePath([p5, p6, p7, p8]),
+          color: this.makeFaceColor("up", color)
+        },
+        {
+          path: this.makeFacePath([p8, p7, p3, p4]),
+          color: this.makeFaceColor("right", color)
+        },
+        {
+          path: this.makeFacePath([p1, p5, p8, p4]),
+          color: this.makeFaceColor("left", color)
+        }
+      );
+      return paths;
+    },
     makeVoxelSvgPath(
       position,
       color,
-      { rightFace = true, leftFace = true, upFace = true, stroke = false } = {}
+      { rightFace = true, leftFace = true, upFace = true, stroke = false } = {},
+      paths = []
     ) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
+      paths.push(
+        this.makeFacePath([p5, p6, p7, p8]),
+        this.makeFacePath([p8, p7, p3, p4]),
+        this.makeFacePath([p1, p5, p8, p4])
+      );
       const upFaceSvgPath = upFace
         ? this.makeSvgPath(
-            this.makeFacePath([p5, p6, p7, p8]),
+            paths[0],
             this.makeFaceColor("up", color),
             stroke,
             'face="up"'
@@ -326,7 +429,7 @@ export default {
         : "";
       const rightFaceSvgPath = rightFace
         ? this.makeSvgPath(
-            this.makeFacePath([p8, p7, p3, p4]),
+            paths[1],
             this.makeFaceColor("right", color),
             stroke,
             'face="right"'
@@ -334,7 +437,7 @@ export default {
         : "";
       const leftFaceSvgPath = leftFace
         ? this.makeSvgPath(
-            this.makeFacePath([p1, p5, p8, p4]),
+            paths[2],
             this.makeFaceColor("left", color),
             stroke,
             'face="left"'
