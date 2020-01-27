@@ -84,6 +84,12 @@ export default {
               attrs: {
                 d: this.makeSvgPathFromPoints(path.points),
                 fill: path.color
+              },
+              on: {
+                // TODO for testing purpose
+                click: () => {
+                  this.paths = this.paths.filter(p => p !== path);
+                }
               }
             })
           )
