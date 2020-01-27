@@ -2,21 +2,7 @@
   <div class="svgVoxelEngine">
     <svg :width="width" :height="height" :viewBox="viewBox" fill="transparent">
       <rect width="100%" height="100%" fill="gray" />
-      <g
-        v-for="voxel of sortedVoxels"
-        :key="voxel.id"
-        v-html="voxel.svgPath"
-        @click.meta="deleteVoxel(voxel)"
-        @click.alt="clear(voxel)"
-        @click.exact="addCloneVoxel($event, voxel)"
-        @mouseover="hoverVoxel($event, voxel)"
-      />
-      <g
-        v-for="voxel of miscVoxels"
-        :key="voxel.id"
-        v-html="voxel.svgPath"
-        style="pointer-events: none;"
-      />
+      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.svgPath" />
     </svg>
   </div>
 </template>
@@ -28,9 +14,7 @@ export default {
   name: "SvgVoxelEngine",
   data() {
     return {
-      voxels: [],
-      miscVoxels: [],
-      objects: []
+      voxels: []
     };
   },
   props: {
@@ -82,64 +66,40 @@ export default {
       this.addGrid();
     }
 
-    this.makeOptimizedBox({ x: 1, y: 1, z: 1 }, "#35EF7E", {
-      xSize: this.size,
-      ySize: this.size,
-      zSize: 3
+    this.addVoxel({ x: 2, y: 2, z: 1 });
+    this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
+    this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
+    this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
+    this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
+    this.addVoxel({ x: 2, y: 2, z: 3 });
+    this.addVoxel({ x: 2, y: 2, z: 5 });
+    this.addVoxel({ x: 2, y: 2, z: 7 });
+
+    this.deleteBox(
+      { x: 9, y: 8, z: 1 },
+      {
+        xSize: 6,
+        ySize: 8,
+        zSize: 7
+      }
+    );
+
+    this.deleteBox(
+      { x: 8, y: 9, z: 1 },
+      {
+        xSize: 8,
+        ySize: 5,
+        zSize: 7
+      }
+    );
+
+    this.makeBox({ x: 10, y: 10, z: 1 }, "#EE82EE", {
+      xSize: 5,
+      ySize: 3,
+      zSize: 10
     });
 
-    this.makeOptimizedBox({ x: 1, y: 1, z: 4 }, "#94979A", {
-      xSize: this.size - 10,
-      ySize: this.size - 10,
-      zSize: 3
-    });
-
-    // this.makeOptimizedBox({ x: 2, y: 2, z: 1 }, "#94979A", {
-    //   xSize: 3,
-    //   ySize: 6,
-    //   zSize: 9
-    // });
-
-    // this.makeBoxObject({ x: 1, y: 1, z: 1 }, "#94979A", {
-    //   xSize: this.size - 2,
-    //   ySize: 7,
-    //   zSize: 8
-    // });
-
-    // this.addVoxel({ x: 2, y: 2, z: 1 });
-    // this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
-    // this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
-    // this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
-    // this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
-    // this.addVoxel({ x: 2, y: 2, z: 3 });
-    // this.addVoxel({ x: 2, y: 2, z: 5 });
-    // this.addVoxel({ x: 2, y: 2, z: 7 });
-
-    // this.deleteBox(
-    //   { x: 9, y: 8, z: 1 },
-    //   {
-    //     xSize: 6,
-    //     ySize: 8,
-    //     zSize: 7
-    //   }
-    // );
-
-    // this.deleteBox(
-    //   { x: 8, y: 9, z: 1 },
-    //   {
-    //     xSize: 8,
-    //     ySize: 5,
-    //     zSize: 7
-    //   }
-    // );
-
-    // this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
-    //   xSize: 5,
-    //   ySize: 3,
-    //   zSize: 10
-    // });
-
-    // this.removeDusplicatedVoxelIds();
+    this.removeDusplicatedVoxelIds();
   },
   computed: {
     sortedVoxels() {
@@ -180,49 +140,12 @@ export default {
     }
   },
   methods: {
-    hoverVoxel(event, voxel) {
-      let position = null;
-      if (event.metaKey) {
-        position = voxel.position;
-      } else {
-        const face = event.target.getAttribute("face");
-        if (!face || !["up", "right", "left"].includes(face)) return;
-        position = this.getFaceNeighbourPoition(voxel.position, face);
-      }
-      const hvoxel = this.makeFullVoxel(position, "#FFFFFF", {
-        stroke: true
-      });
-      hvoxel.id = "X" + hvoxel.id;
-      this.miscVoxels = [hvoxel];
-    },
-    getFaceNeighbourPoition(position, face) {
-      const { x, y, z } = position;
-      return {
-        x: x + (face === "right" ? 1 : 0),
-        y: y - (face === "left" ? 1 : 0),
-        z: z + (face === "up" ? 1 : 0)
-      };
-    },
-    addCloneVoxel(clickEvent, voxel) {
-      const face = clickEvent.target.getAttribute("face");
-      if (!face || !["up", "right", "left"].includes(face)) return;
-
-      this.addVoxel(
-        this.getFaceNeighbourPoition(voxel.position, face),
-        voxel.color
-      );
-    },
     addGrid() {
       this.addFullSlab(0, this.gridColor, {
         stroke: true,
         leftFace: false,
         rightFace: false
       });
-    },
-    removeDusplicatedVoxelIds() {
-      const uniqueIds = new Map();
-      this.sortedVoxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
-      this.voxels = [...uniqueIds.values()];
     },
     /**
      * Remove the voxel and all its siblings if it belongs to an object
@@ -241,9 +164,6 @@ export default {
       );
       return true;
     },
-    makeFullSlabObject(stage = 1, color = "#00FF00", cfg) {
-      this.objects.push(this.addFullSlab(stage, color, cfg));
-    },
     addFullSlab(stage = 1, color = "#00FF00", cfg = {}) {
       const { offset = 0 } = cfg;
       return this.makeBox(
@@ -257,91 +177,10 @@ export default {
         cfg
       );
     },
-    /**
-     * Return the svg y coodrinate of the nth stage.
-     */
-    getStageY(stage) {
-      return (
-        this.height -
-        ((this.size / 2) * this.voxelYSize +
-          this.offset +
-          (stage - 1) * this.voxelYSize)
-      );
-    },
-    getVoxelAt(position) {
-      return this.voxels.find(voxel => voxel.id === this.generateId(position));
-    },
-    makeBoxObject(position, color, sizes) {
-      this.objects.push(this.makeBox(position, color, sizes));
-    },
     deleteBox(position, sizes) {
       this.getBoxCoordinates(position, sizes).forEach(point =>
         this.deleteVoxel(this.getVoxelAt(point))
       );
-    },
-    makeOptimizedBox(position, color, sizes) {
-      const [p1, , p3, p4, p5, p6, p7, p8] = this.getBoxCorners(
-        position,
-        sizes
-      );
-
-      const upFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p5, p6, p7, p8]),
-        this.makeFaceColor("up", color),
-        false,
-        'face="up"'
-      );
-      const rightFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p8, p7, p3, p4]),
-        this.makeFaceColor("right", color),
-        false,
-        'face="right"'
-      );
-      const leftFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p1, p5, p8, p4]),
-        this.makeFaceColor("left", color),
-        false,
-        'face="left"'
-      );
-      const svgPath = `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
-
-      this.voxels.push({
-        zIndex: Infinity,
-        svgPath
-      });
-    },
-    getBoxCorners(position, sizes) {
-      const [
-        pos1,
-        ,
-        pos3,
-        pos4,
-        pos5,
-        pos6,
-        pos7,
-        pos8
-      ] = this.getBoxCornersPosition(position, sizes);
-      const p1 = this.getVoxelOrigin(pos1);
-      const p3 = this.getVoxelCoordinates(pos3)[2];
-      const p4 = this.getVoxelCoordinates(pos4)[3];
-      const p5 = this.getVoxelCoordinates(pos5)[4];
-      const p6 = this.getVoxelCoordinates(pos6)[5];
-      const p7 = this.getVoxelCoordinates(pos7)[6];
-      const p8 = this.getVoxelCoordinates(pos8)[7];
-
-      return [p1, null, p3, p4, p5, p6, p7, p8];
-    },
-    getBoxCornersPosition(position, { xSize = 1, ySize = 1, zSize = 1 }) {
-      const { x, y, z } = position;
-      const pos1 = { x, y, z };
-      const pos3 = { x: x + xSize - 1, y: y + ySize - 1, z };
-      const pos4 = { x: x + xSize - 1, y, z };
-      const pos5 = { x, y, z: z + zSize };
-      const pos6 = { x, y: y + ySize - 1, z: z + zSize };
-      const pos7 = { x: x + xSize - 1, y: y + ySize - 1, z: z + zSize };
-      const pos8 = { x: x + xSize - 1, y, z: z + zSize };
-
-      return [pos1, null, pos3, pos4, pos5, pos6, pos7, pos8];
     },
     makeBox(position, color, sizes, cfg) {
       const box = {
@@ -351,18 +190,6 @@ export default {
         box.voxels.push(this.addVoxel(point, color, cfg, box))
       );
       return box;
-    },
-    getBoxCoordinates(position, { xSize = 1, ySize = 1, zSize = 1 }) {
-      const { x, y, z } = position;
-      const boxCoordinates = [];
-      for (let dx = 0; dx < xSize; dx++) {
-        for (let dy = 0; dy < ySize; dy++) {
-          for (let dz = 0; dz < zSize; dz++) {
-            boxCoordinates.push({ x: x + dx, y: y + dy, z: z + dz });
-          }
-        }
-      }
-      return boxCoordinates;
     },
     addVoxel(position, color = "#FF0000", cfg, parent) {
       const voxel = this.makeFullVoxel(position, color, cfg, parent);
@@ -378,14 +205,6 @@ export default {
         zIndex: this.getZIndex(position),
         parent
       };
-    },
-    generateId(position) {
-      return `voxel-x${position.x}-y${position.y}-z${position.z}`;
-    },
-    getZIndex(position) {
-      const { x, y, z } = position;
-      const maxPerStage = z * (this.size * 2 - 1);
-      return maxPerStage - (this.size - x) - (y - 1);
     },
     makeVoxelSvgPath(
       position,
@@ -419,6 +238,43 @@ export default {
         : "";
       return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
     },
+    makeSvgPath(path, color, stroke, args = "") {
+      return `<path d="${path}" ${
+        stroke ? "stroke" : "fill"
+      }="${color}" ${args}/>`;
+    },
+    makeFacePath(points) {
+      const [p1, p2, p3, p4] = points;
+      return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
+    },
+    /***************************/
+    /********** UTILS **********/
+    /***************************/
+    generateId(position) {
+      return `voxel-x${position.x}-y${position.y}-z${position.z}`;
+    },
+    /***********************************/
+    /********** PRE RENDERING **********/
+    /***********************************/
+    removeDusplicatedVoxelIds() {
+      const uniqueIds = new Map();
+      this.voxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
+      this.voxels = [...uniqueIds.values()];
+    },
+    /*******************************/
+    /********** POSITIONS **********/
+    /*******************************/
+    getVoxelAt(position) {
+      return this.voxels.find(voxel => voxel.id === this.generateId(position));
+    },
+    getZIndex(position) {
+      const { x, y, z } = position;
+      const maxPerStage = z * (this.size * 2 - 1);
+      return maxPerStage - (this.size - x) - (y - 1);
+    },
+    /****************************/
+    /********** COLORS **********/
+    /****************************/
     /**
      * Lighten or darken face sepending on light configuration
      */
@@ -432,25 +288,22 @@ export default {
         shadowHue = 20
       } = this.lightCfg;
       if (face === lightFace) {
-        return lightenColor(hueShift(color, lightHue), light);
+        return this.lightenColor(hueShift(color, lightHue), light);
       } else if (face === shadowFace) {
         return this.darkenColor(hueShift(color, shadowHue), shadow);
       } else {
         return color;
       }
     },
-    makeSvgPath(path, color, stroke, args = "") {
-      return `<path d="${path}" ${
-        stroke ? "stroke" : "fill"
-      }="${color}" ${args}/>`;
-    },
     darkenColor(color, amount) {
       return lightenColor(color, -amount);
     },
-    makeFacePath(points) {
-      const [p1, p2, p3, p4] = points;
-      return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
+    lightenColor(color, amount) {
+      return lightenColor(color, amount);
     },
+    /*********************************/
+    /********** COORDINATES **********/
+    /*********************************/
     /**
      * Returns the coordinates of the voxel.
      * @return coordinates - an array of 8 value representing the 0 - 0 point, the 0 - 1 point ...
@@ -458,7 +311,7 @@ export default {
      */
     getVoxelCoordinates(position) {
       const origin = this.getVoxelOrigin(position);
-      const bottomFaceCoordinates = this.makeHorizontalFaceCoordinates(origin);
+      const bottomFaceCoordinates = this.getHorizontalFaceCoordinates(origin);
       return [
         ...bottomFaceCoordinates,
         ...bottomFaceCoordinates.map(({ x, y }) => ({
@@ -467,10 +320,22 @@ export default {
         }))
       ];
     },
+    getBoxCoordinates(position, { xSize = 1, ySize = 1, zSize = 1 }) {
+      const { x, y, z } = position;
+      const boxCoordinates = [];
+      for (let dx = 0; dx < xSize; dx++) {
+        for (let dy = 0; dy < ySize; dy++) {
+          for (let dz = 0; dz < zSize; dz++) {
+            boxCoordinates.push({ x: x + dx, y: y + dy, z: z + dz });
+          }
+        }
+      }
+      return boxCoordinates;
+    },
     /**
      * Return 4 points (up face) from an origin point (voxel x0 y0)
      */
-    makeHorizontalFaceCoordinates(origin) {
+    getHorizontalFaceCoordinates(origin) {
       const { x, y } = origin;
       return [
         { x, y },
@@ -500,6 +365,17 @@ export default {
           (1 / 2) * this.voxelYSize * (x - 1) -
           (1 / 2) * this.voxelYSize * (y - 1)
       };
+    },
+    /**
+     * Return the svg y coodrinate of the nth stage.
+     */
+    getStageY(stage) {
+      return (
+        this.height -
+        ((this.size / 2) * this.voxelYSize +
+          this.offset +
+          (stage - 1) * this.voxelYSize)
+      );
     }
   }
 };
