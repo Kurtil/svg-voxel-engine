@@ -54,10 +54,14 @@ export default {
     this.addFullSlab(3, "#6D6E71", 5);
 
     this.addVoxel({ x: 2, y: 2, z: 3 });
-    this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
     this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
 
-    this.renderVoxels();
+    this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
+    this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
+
+    this.renderVoxels(this.addQuadFacePathFromVoxel);
   },
   render(h) {
     return h("div", [
@@ -175,22 +179,23 @@ export default {
      * Fill paths from voxels.
      * A displayed path is an object with p1, p2, p3 and color properties.
      */
-    renderVoxels() {
+    renderVoxels(voxelRenderFunction) {
       [...this.voxels.values()]
         .sort(this.voxelCompareFunction)
-        .forEach((voxel, voxelIndex) => {
-          Object.entries(voxel.faces).forEach(([orientation, paths]) => {
-            const p1 = paths[0][0];
-            const p2 = paths[0][1];
-            const p3 = orientation === "left" ? paths[1][2] : paths[1][1];
-            const p4 = orientation === "left" ? paths[1][0] : paths[1][2];
-            this.paths.push({
-              id: `i${voxelIndex}f${orientation}`,
-              points: [p1, p2, p3, p4],
-              color: this.makeFaceColor(orientation, voxel.color)
-            });
-          });
+        .forEach(voxelRenderFunction);
+    },
+    addQuadFacePathFromVoxel(voxel, voxelIndex) {
+      Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+        const p1 = paths[0][0];
+        const p2 = paths[0][1];
+        const p3 = orientation === "left" ? paths[1][2] : paths[1][1];
+        const p4 = orientation === "left" ? paths[1][0] : paths[1][2];
+        this.paths.push({
+          id: `i${voxelIndex}f${orientation}`,
+          points: [p1, p2, p3, p4],
+          color: this.makeFaceColor(orientation, voxel.color)
         });
+      });
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
