@@ -1,12 +1,3 @@
-<template>
-  <div class="svgVoxelEngine">
-    <svg :width="width" :height="height" :viewBox="viewBox" fill="transparent">
-      <rect width="100%" height="100%" fill="gray" />
-      <g v-for="voxel of sortedVoxels" :key="voxel.id" v-html="voxel.svgPath" />
-    </svg>
-  </div>
-</template>
-
 <script>
 import { lightenColor, hueShift } from "../utils/colors.js";
 
@@ -14,7 +5,15 @@ export default {
   name: "SvgVoxelEngine",
   data() {
     return {
-      voxels: []
+      /**
+       * A map of all added voxels.
+       * The map ensure id unicity.
+       */
+      voxels: new Map(),
+      /**
+       * The path to display.
+       */
+      paths: []
     };
   },
   props: {
@@ -31,21 +30,9 @@ export default {
       type: Number,
       default: 32
     },
-    rise: {
-      type: Number,
-      default: 20
-    },
     depthRatio: {
       type: Number,
       default: 0.5
-    },
-    grid: {
-      type: Boolean,
-      default: true
-    },
-    gridColor: {
-      type: String,
-      default: "#777777"
     },
     lightCfg: {
       type: Object,
@@ -62,57 +49,54 @@ export default {
   created() {
     window.engine = this; // TODO for development only
 
-    if (this.grid) {
-      this.addGrid();
-    }
+    this.addFullSlab(1, "#21C786");
+    this.addFullSlab(2, "#21C786");
+    this.addFullSlab(3, "#6D6E71", 5);
 
-    this.addVoxel({ x: 2, y: 2, z: 1 });
-    this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
-    this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
-    this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
-    this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
-    this.addVoxel({ x: 2, y: 2, z: 3 });
-    this.addVoxel({ x: 2, y: 2, z: 5 });
-    this.addVoxel({ x: 2, y: 2, z: 7 });
+    this.addVoxel({ x: 2, y: 2, z: 4 });
+    this.addVoxel({ x: 2, y: 3, z: 4 }, "#FF0000");
+    this.addVoxel({ x: 3, y: 2, z: 4 }, "#0000FF");
+    this.addVoxel({ x: 3, y: 3, z: 4 }, "#FFFF00");
+    this.addVoxel({ x: 2, y: 2, z: 5 }, "#FFA500");
+    this.addVoxel({ x: 2, y: 2, z: 6 });
+    this.addVoxel({ x: 2, y: 2, z: 8 });
+    this.addVoxel({ x: 2, y: 2, z: 10 });
 
-    this.deleteBox(
-      { x: 9, y: 8, z: 1 },
-      {
-        xSize: 6,
-        ySize: 8,
-        zSize: 7
-      }
-    );
-
-    this.deleteBox(
-      { x: 8, y: 9, z: 1 },
-      {
-        xSize: 8,
-        ySize: 5,
-        zSize: 7
-      }
-    );
-
-    this.makeBox({ x: 10, y: 10, z: 1 }, "#EE82EE", {
-      xSize: 5,
-      ySize: 3,
-      zSize: 10
-    });
-
-    this.removeDusplicatedVoxelIds();
+    this.renderVoxels();
+  },
+  render(h) {
+    return h("div", [
+      h(
+        "svg",
+        {
+          attrs: {
+            width: this.width,
+            height: this.height,
+            viewBox: this.viewBox
+          }
+        },
+        [
+          h("rect", {
+            attrs: {
+              width: "100%",
+              height: "100%",
+              fill: "gray"
+            }
+          }),
+          ...this.paths.map(path =>
+            h("path", {
+              key: path.id,
+              attrs: {
+                d: this.makeSvgPathFromPoints(path.points),
+                fill: path.color
+              }
+            })
+          )
+        ]
+      )
+    ]);
   },
   computed: {
-    sortedVoxels() {
-      return Array.from(this.voxels).sort((a, b) => {
-        if (a.zIndex > b.zIndex) {
-          return 1;
-        } else if (a.zIndex < b.zIndex) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-    },
     viewBox() {
       return `
       ${0}
@@ -140,13 +124,6 @@ export default {
     }
   },
   methods: {
-    addGrid() {
-      this.addFullSlab(0, this.gridColor, {
-        stroke: true,
-        leftFace: false,
-        rightFace: false
-      });
-    },
     /**
      * Remove the voxel and all its siblings if it belongs to an object
      */
@@ -164,25 +141,19 @@ export default {
       );
       return true;
     },
-    addFullSlab(stage = 1, color = "#00FF00", cfg = {}) {
-      const { offset = 0 } = cfg;
-      return this.makeBox(
-        { x: 1 + offset, y: 1 + offset, z: stage },
-        color,
-        {
-          xSize: this.size - 2 * offset,
-          ySize: this.size - 2 * offset,
-          zSize: 1
-        },
-        cfg
-      );
+    addFullSlab(stage = 1, color = "#00FF00", offset = 0) {
+      return this.addBox({ x: 1 + offset, y: 1 + offset, z: stage }, color, {
+        xSize: this.size - 2 * offset,
+        ySize: this.size - 2 * offset,
+        zSize: 1
+      });
     },
     deleteBox(position, sizes) {
       this.getBoxCoordinates(position, sizes).forEach(point =>
         this.deleteVoxel(this.getVoxelAt(point))
       );
     },
-    makeBox(position, color, sizes, cfg) {
+    addBox(position, color, sizes, cfg) {
       const box = {
         voxels: []
       };
@@ -191,61 +162,73 @@ export default {
       );
       return box;
     },
-    addVoxel(position, color = "#FF0000", cfg, parent) {
-      const voxel = this.makeFullVoxel(position, color, cfg, parent);
-      this.voxels.push(voxel);
+    addVoxel(position, color = "#FF0000") {
+      const voxel = this.makeVoxel(position, color);
+      this.voxels.set(voxel.id, voxel);
       return voxel;
     },
-    makeFullVoxel(position, color, cfg, parent = null) {
+    /*******************************/
+    /********** RENDERING **********/
+    /*******************************/
+    /**
+     * Fill paths from voxels.
+     * A displayed path is an object with p1, p2, p3 and color properties.
+     */
+    renderVoxels() {
+      [...this.voxels.values()]
+        .sort(this.voxelCompareFunction)
+        .forEach((voxel, voxelIndex) => {
+          Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+            const p1 = paths[0][0];
+            const p2 = paths[0][1];
+            const p3 = orientation === "left" ? paths[1][2] : paths[1][1];
+            const p4 = orientation === "left" ? paths[1][0] : paths[1][2];
+            this.paths.push({
+              id: `i${voxelIndex}f${orientation}`,
+              points: [p1, p2, p3, p4],
+              color: this.makeFaceColor(orientation, voxel.color)
+            });
+          });
+        });
+    },
+    makeSvgPathFromPoints(points) {
+      return points.reduce((acc, p, i, arr) => {
+        return acc + `${p.x} ${p.y}${i === arr.length - 1 ? "Z" : "L"}`;
+      }, "M");
+    },
+    /*************************************/
+    /********** VOXEL FACTORIES **********/
+    /*************************************/
+    makeVoxel(position, color) {
       return {
         id: this.generateId(position),
         position,
         color,
-        svgPath: this.makeVoxelSvgPath(position, color, cfg),
         zIndex: this.getZIndex(position),
-        parent
+        faces: this.makeVoxelFaces(position)
       };
     },
-    makeVoxelSvgPath(
-      position,
-      color,
-      { rightFace = true, leftFace = true, upFace = true, stroke = false } = {}
-    ) {
+    /**
+     * Returns the voxel faces.
+     * A face is an array of two paths.
+     * A path is an array of three points.
+     */
+    makeVoxelFaces(position) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
-      const upFaceSvgPath = upFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p5, p6, p7, p8]),
-            this.makeFaceColor("up", color),
-            stroke,
-            'face="up"'
-          )
-        : "";
-      const rightFaceSvgPath = rightFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p8, p7, p3, p4]),
-            this.makeFaceColor("right", color),
-            stroke,
-            'face="right"'
-          )
-        : "";
-      const leftFaceSvgPath = leftFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p1, p5, p8, p4]),
-            this.makeFaceColor("left", color),
-            stroke,
-            'face="left"'
-          )
-        : "";
-      return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
-    },
-    makeSvgPath(path, color, stroke, args = "") {
-      return `<path d="${path}" ${
-        stroke ? "stroke" : "fill"
-      }="${color}" ${args}/>`;
-    },
-    makeFacePath(points) {
-      const [p1, p2, p3, p4] = points;
-      return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
+      return {
+        up: [
+          [p5, p6, p8],
+          [p6, p7, p8]
+        ],
+        right: [
+          [p8, p7, p3],
+          [p8, p3, p4]
+        ],
+        left: [
+          [p5, p8, p1],
+          [p1, p8, p4]
+        ]
+      };
     },
     /***************************/
     /********** UTILS **********/
@@ -253,13 +236,17 @@ export default {
     generateId(position) {
       return `voxel-x${position.x}-y${position.y}-z${position.z}`;
     },
-    /***********************************/
-    /********** PRE RENDERING **********/
-    /***********************************/
-    removeDusplicatedVoxelIds() {
-      const uniqueIds = new Map();
-      this.voxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
-      this.voxels = [...uniqueIds.values()];
+    /**
+     * Used to sort voxel by zIndex
+     */
+    voxelCompareFunction(a, b) {
+      if (a.zIndex > b.zIndex) {
+        return 1;
+      } else if (a.zIndex < b.zIndex) {
+        return -1;
+      } else {
+        return 0;
+      }
     },
     /*******************************/
     /********** POSITIONS **********/
@@ -380,5 +367,3 @@ export default {
   }
 };
 </script>
-
-<style scoped lang="scss"></style>
