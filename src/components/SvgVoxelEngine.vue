@@ -61,7 +61,7 @@ export default {
     this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
     this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
 
-    this.renderVoxels(this.addQuadFacePathFromVoxel);
+    this.renderVoxels(this.addTriFacePathFromVoxel);
   },
   render(h) {
     return h("div", [
@@ -129,13 +129,6 @@ export default {
     }
   },
   methods: {
-    /**
-     * Remove the voxel and all its siblings if it belongs to an object
-     */
-    clear(voxel = {}) {
-      const voxelsToRemove = voxel.parent ? voxel.parent.voxels : [voxel];
-      this.deleteVoxels(voxelsToRemove);
-    },
     deleteVoxel(voxel) {
       this.deleteVoxels([voxel]);
     },
@@ -195,6 +188,22 @@ export default {
           points: [p1, p2, p3, p4],
           color: this.makeFaceColor(orientation, voxel.color)
         });
+      });
+    },
+    addTriFacePathFromVoxel(voxel, voxelIndex) {
+      Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+        this.paths.push(
+          {
+            id: `i${voxelIndex}f${orientation}s1`,
+            points: paths[0],
+            color: this.makeFaceColor(orientation, voxel.color)
+          },
+          {
+            id: `i${voxelIndex}f${orientation}s2`,
+            points: paths[1],
+            color: this.makeFaceColor(orientation, voxel.color)
+          }
+        );
       });
     },
     makeSvgPathFromPoints(points) {
