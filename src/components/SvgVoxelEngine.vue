@@ -121,6 +121,12 @@ export default {
     voxelYSize() {
       return this.voxelXSize * this.depthRatio;
     },
+    maxZ() {
+      return [...this.voxels.values()].reduce(
+        (acc, voxel) => (voxel.position.z > acc ? voxel.position.z : acc),
+        0
+      );
+    },
     /**
      * the offset lenght on svg-x axis
      */
