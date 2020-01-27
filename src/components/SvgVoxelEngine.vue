@@ -1,4 +1,6 @@
 <script>
+/* eslint-disable */
+
 import { lightenColor, hueShift } from "../utils/colors.js";
 
 export default {
@@ -92,7 +94,7 @@ export default {
               on: {
                 // TODO for testing purpose
                 click: () => {
-                  this.paths = this.paths.filter(p => p !== path);
+                  console.log(`Path key : ${path.shellKey}`);
                 }
               }
             })
@@ -157,12 +159,12 @@ export default {
         this.deleteVoxel(this.getVoxelAt(point))
       );
     },
-    addBox(position, color, sizes, cfg) {
+    addBox(position, color, sizes) {
       const box = {
         voxels: []
       };
       this.getBoxCoordinates(position, sizes).forEach(point =>
-        box.voxels.push(this.addVoxel(point, color, cfg, box))
+        box.voxels.push(this.addVoxel(point, color))
       );
       return box;
     },
@@ -202,15 +204,45 @@ export default {
           {
             id: `i${voxelIndex}f${orientation}s1`,
             points: paths[0],
-            color: this.makeFaceColor(orientation, voxel.color)
+            color: this.makeFaceColor(orientation, voxel.color),
+            voxel,
+            shellKey: this.getShellKey(voxel, orientation, 1)
           },
           {
             id: `i${voxelIndex}f${orientation}s2`,
             points: paths[1],
-            color: this.makeFaceColor(orientation, voxel.color)
+            color: this.makeFaceColor(orientation, voxel.color),
+            voxel,
+            shellKey: this.getShellKey(voxel, orientation, 2)
           }
         );
       });
+    },
+    /**
+     * After tri face render.
+     */
+    // optiTest() {
+    //   // Only displayed paths will be kept.
+    //   const shellPaths = new Map();
+    //   [...this.voxels.values()].forEach(voxel => {
+    //     Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+    //       shellPaths.set(this.getShellKey(voxel, orientation, 1), paths[0]);
+    //       shellPaths.set(this.getShellKey(voxel, orientation, 2), paths[1]);
+    //     });
+    //   });
+    // },
+    getShellKey(voxel, orientation, faceIndex) {
+      const { x: px, y: py, z: pz } = voxel.position;
+      let face = null;
+      let x = null;
+      let y = null;
+
+      const zDiff = this.maxZ - pz;
+      if (zDiff * py - zDiff * (this.size - px - 1) >= 0) {
+        face = "t";
+      }
+
+      return `f-${face}-x-${x}-y-${y}`;
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
