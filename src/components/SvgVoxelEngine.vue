@@ -53,14 +53,9 @@ export default {
     this.addFullSlab(2, "#21C786");
     this.addFullSlab(3, "#6D6E71", 5);
 
-    this.addVoxel({ x: 2, y: 2, z: 4 });
-    this.addVoxel({ x: 2, y: 3, z: 4 }, "#FF0000");
-    this.addVoxel({ x: 3, y: 2, z: 4 }, "#0000FF");
-    this.addVoxel({ x: 3, y: 3, z: 4 }, "#FFFF00");
-    this.addVoxel({ x: 2, y: 2, z: 5 }, "#FFA500");
-    this.addVoxel({ x: 2, y: 2, z: 6 });
-    this.addVoxel({ x: 2, y: 2, z: 8 });
-    this.addVoxel({ x: 2, y: 2, z: 10 });
+    this.addVoxel({ x: 2, y: 2, z: 3 });
+    this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
+    this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
 
     this.renderVoxels();
   },
