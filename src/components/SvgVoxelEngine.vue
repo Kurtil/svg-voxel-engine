@@ -231,7 +231,7 @@ export default {
     makeVoxelFaces(position) {
       const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
       return {
-        up: [
+        top: [
           [p5, p6, p8],
           [p6, p7, p8]
         ],
@@ -283,7 +283,7 @@ export default {
     makeFaceColor(face, color) {
       const {
         light = 10,
-        lightFace = "up",
+        lightFace = "top",
         lightHue = 5,
         shadow = 30,
         shadowFace = "right",
@@ -335,7 +335,7 @@ export default {
       return boxCoordinates;
     },
     /**
-     * Return 4 points (up face) from an origin point (voxel x0 y0)
+     * Return 4 points (top face) from an origin point (voxel x0 y0)
      */
     getHorizontalFaceCoordinates(origin) {
       const { x, y } = origin;
