@@ -82,12 +82,25 @@ export default {
       this.addGrid();
     }
 
-    this.addFullSlab(1, "#35EF7E");
-    this.addFullSlab(2, "#35EF7E");
-    this.addFullSlab(3, "#94979A", { offset: 5 });
-    this.addFullSlab(4, "#94979A", { offset: 5 });
+    this.makeOptimizedBox({ x: 1, y: 1, z: 1 }, "#35EF7E", {
+      xSize: this.size,
+      ySize: this.size,
+      zSize: 3
+    });
 
-    // this.makeBoxObject({ x: 2, y: 2, z: 2 }, "#94979A", {
+    this.makeOptimizedBox({ x: 1, y: 1, z: 4 }, "#94979A", {
+      xSize: this.size - 10,
+      ySize: this.size - 10,
+      zSize: 3
+    });
+
+    // this.makeOptimizedBox({ x: 2, y: 2, z: 1 }, "#94979A", {
+    //   xSize: 3,
+    //   ySize: 6,
+    //   zSize: 9
+    // });
+
+    // this.makeBoxObject({ x: 1, y: 1, z: 1 }, "#94979A", {
     //   xSize: this.size - 2,
     //   ySize: 7,
     //   zSize: 8
@@ -126,7 +139,7 @@ export default {
     //   zSize: 10
     // });
 
-    this.removeDusplicatedVoxelIds();
+    // this.removeDusplicatedVoxelIds();
   },
   computed: {
     sortedVoxels() {
@@ -265,6 +278,70 @@ export default {
       this.getBoxCoordinates(position, sizes).forEach(point =>
         this.deleteVoxel(this.getVoxelAt(point))
       );
+    },
+    makeOptimizedBox(position, color, sizes) {
+      const [p1, , p3, p4, p5, p6, p7, p8] = this.getBoxCorners(
+        position,
+        sizes
+      );
+
+      const upFaceSvgPath = this.makeSvgPath(
+        this.makeFacePath([p5, p6, p7, p8]),
+        this.makeFaceColor("up", color),
+        false,
+        'face="up"'
+      );
+      const rightFaceSvgPath = this.makeSvgPath(
+        this.makeFacePath([p8, p7, p3, p4]),
+        this.makeFaceColor("right", color),
+        false,
+        'face="right"'
+      );
+      const leftFaceSvgPath = this.makeSvgPath(
+        this.makeFacePath([p1, p5, p8, p4]),
+        this.makeFaceColor("left", color),
+        false,
+        'face="left"'
+      );
+      const svgPath = `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
+
+      this.voxels.push({
+        zIndex: Infinity,
+        svgPath
+      });
+    },
+    getBoxCorners(position, sizes) {
+      const [
+        pos1,
+        ,
+        pos3,
+        pos4,
+        pos5,
+        pos6,
+        pos7,
+        pos8
+      ] = this.getBoxCornersPosition(position, sizes);
+      const p1 = this.getVoxelOrigin(pos1);
+      const p3 = this.getVoxelCoordinates(pos3)[2];
+      const p4 = this.getVoxelCoordinates(pos4)[3];
+      const p5 = this.getVoxelCoordinates(pos5)[4];
+      const p6 = this.getVoxelCoordinates(pos6)[5];
+      const p7 = this.getVoxelCoordinates(pos7)[6];
+      const p8 = this.getVoxelCoordinates(pos8)[7];
+
+      return [p1, null, p3, p4, p5, p6, p7, p8];
+    },
+    getBoxCornersPosition(position, { xSize = 1, ySize = 1, zSize = 1 }) {
+      const { x, y, z } = position;
+      const pos1 = { x, y, z };
+      const pos3 = { x: x + xSize - 1, y: y + ySize - 1, z };
+      const pos4 = { x: x + xSize - 1, y, z };
+      const pos5 = { x, y, z: z + zSize };
+      const pos6 = { x, y: y + ySize - 1, z: z + zSize };
+      const pos7 = { x: x + xSize - 1, y: y + ySize - 1, z: z + zSize };
+      const pos8 = { x: x + xSize - 1, y, z: z + zSize };
+
+      return [pos1, null, pos3, pos4, pos5, pos6, pos7, pos8];
     },
     makeBox(position, color, sizes, cfg) {
       const box = {
