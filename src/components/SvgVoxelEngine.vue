@@ -55,8 +55,18 @@ export default {
     this.addFullSlab(2, "#21C786");
     this.addFullSlab(3, "#6D6E71", 5);
 
-    this.addVoxel({ x: 2, y: 2, z: 3 });
+    this.addBox({ x: 1, y: this.size - 4, z: 3 }, "#0000FF", {
+      xSize: 5,
+      ySize: 5,
+      zSize: 2
+    });
+
+    // this.addVoxel({ x: 2, y: 2, z: 3 });
     this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
+    this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
 
     this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
@@ -94,6 +104,7 @@ export default {
               on: {
                 // TODO for testing purpose
                 click: () => {
+                  this.paths = this.paths.filter(p => p !== path);
                   console.log(`Path key : ${path.shellKey}`);
                 }
               }
@@ -200,22 +211,34 @@ export default {
     },
     addTriFacePathFromVoxel(voxel, voxelIndex) {
       Object.entries(voxel.faces).forEach(([orientation, paths]) => {
-        this.paths.push(
-          {
-            id: `i${voxelIndex}f${orientation}s1`,
-            points: paths[0],
-            color: this.makeFaceColor(orientation, voxel.color),
-            voxel,
-            shellKey: this.getShellKey(voxel, orientation, 1)
-          },
-          {
-            id: `i${voxelIndex}f${orientation}s2`,
-            points: paths[1],
-            color: this.makeFaceColor(orientation, voxel.color),
-            voxel,
-            shellKey: this.getShellKey(voxel, orientation, 2)
+        const firstPath = {
+          id: `i${voxelIndex}f${orientation}s1`,
+          points: paths[0],
+          color: this.makeFaceColor(orientation, voxel.color),
+          voxel,
+          shellKey: this.getShellKey(voxel, orientation, 1)
+        };
+        const secondPath = {
+          id: `i${voxelIndex}f${orientation}s2`,
+          points: paths[1],
+          color: this.makeFaceColor(orientation, voxel.color),
+          voxel,
+          shellKey: this.getShellKey(voxel, orientation, 2)
+        };
+        const getFaceColor = face => {
+          if (face === "t") {
+            return "#FF0000";
+          } else if (face === "l") {
+            return "#00FF00";
+          } else if (face === "r") {
+            return "#0000FF";
           }
-        );
+        };
+        firstPath.color = getFaceColor(firstPath.shellKey) || firstPath.color;
+        secondPath.color =
+          getFaceColor(secondPath.shellKey) || secondPath.color;
+
+        this.paths.push(firstPath, secondPath);
       });
     },
     /**
@@ -238,11 +261,24 @@ export default {
       let y = null;
 
       const zDiff = this.maxZ - pz;
-      if (zDiff * py - zDiff * (this.size - px - 1) >= 0) {
+      const orientationYOffset =
+        orientation === "top" || (orientation === "right" && faceIndex === 1)
+          ? 0
+          : 1;
+      const orientationXOffset =
+        orientation === "top" || (orientation === "left" && faceIndex === 1)
+          ? 0
+          : 1;
+      if (zDiff - (this.size - px - orientationXOffset) > 0) {
+        face = "r";
+      } else if (zDiff - (py - 1 - orientationYOffset) > 0) {
+        face = "l";
+      } else {
         face = "t";
       }
 
-      return `f-${face}-x-${x}-y-${y}`;
+      // return `f-${face}-x-${x}-y-${y}`;
+      return face;
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
