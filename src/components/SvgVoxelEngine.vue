@@ -269,9 +269,9 @@ export default {
         orientation === "top" || (orientation === "left" && faceIndex === 1)
           ? 0
           : 1;
-      if (zDiff - (this.size - px - orientationXOffset) > 0) {
+      if (this.size - px - orientationXOffset < zDiff) {
         face = "r";
-      } else if (zDiff - (py - 1 - orientationYOffset) > 0) {
+      } else if (py - 1 - orientationYOffset < zDiff) {
         face = "l";
       } else {
         face = "t";
