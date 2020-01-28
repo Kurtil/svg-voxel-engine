@@ -30,7 +30,7 @@ export default {
     },
     size: {
       type: Number,
-      default: 32
+      default: 16
     },
     depthRatio: {
       type: Number,
@@ -58,7 +58,13 @@ export default {
     this.addBox({ x: 1, y: this.size - 4, z: 3 }, "#0000FF", {
       xSize: 5,
       ySize: 5,
-      zSize: 2
+      zSize: 4
+    });
+
+    this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
+      xSize: this.size,
+      ySize: this.size,
+      zSize: 7
     });
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
@@ -226,11 +232,11 @@ export default {
           shellKey: this.getShellKey(voxel, orientation, 2)
         };
         const getFaceColor = face => {
-          if (face === "t") {
+          if (face.match(/f-t/)) {
             return "#FF0000";
-          } else if (face === "l") {
+          } else if (face.match(/f-l/)) {
             return "#00FF00";
-          } else if (face === "r") {
+          } else if (face.match(/f-r/)) {
             return "#0000FF";
           }
         };
@@ -265,20 +271,34 @@ export default {
         orientation === "top" || (orientation === "right" && faceIndex === 1)
           ? 0
           : 1;
+      const orientationY2Offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? 0
+          : 1;
       const orientationXOffset =
         orientation === "top" || (orientation === "left" && faceIndex === 1)
           ? 0
           : 1;
-      if (this.size - px - orientationXOffset < zDiff) {
+      const orientationX2Offset =
+        orientation === "right" || (orientation === "top" && faceIndex === 2)
+          ? 0
+          : 1;
+      if (
+        this.size - px - orientationXOffset < zDiff &&
+        py > this.size - px + orientationX2Offset
+      ) {
         face = "r";
-      } else if (py - 1 - orientationYOffset < zDiff) {
+      } else if (
+        py - 1 - orientationYOffset < zDiff && // after the && is not mandatory because it is handled by the first if... not deleted to show the algo
+        this.size - px + 1 > py - 1 + orientationY2Offset
+      ) {
         face = "l";
+        x = px * 2 - 1 + faceIndex - 1 + zDiff * 2 + (orientation === "top" ? -1 : orientation === "right" ? 1 : 0);
       } else {
         face = "t";
       }
 
-      // return `f-${face}-x-${x}-y-${y}`;
-      return face;
+      return `f-${face}-x-${x}-y-${y}`;
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
