@@ -329,9 +329,47 @@ export default {
         );
       } else {
         face = "t";
+        x = this.getShellTopFaceXCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+        y = this.getShellTopFaceYCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
       }
 
       return `f-${face}-x-${x}-y-${y}`;
+    },
+    getShellTopFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {},
+    getShellTopFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = -1;
+        } else {
+          offset = 0;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      }
+      return offset + (px + zDiff) * 2;
     },
     getShellRightFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
       let offset =
