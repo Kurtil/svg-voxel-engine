@@ -293,7 +293,14 @@ export default {
         this.size - px + 1 > py - 1 + orientationY2Offset
       ) {
         face = "l";
-        x = px * 2 - 1 + faceIndex - 1 + zDiff * 2 + (orientation === "top" ? -1 : orientation === "right" ? 1 : 0);
+        x =
+          (orientation === "top" ? 2 : orientation === "right" ? 2 : 0) +
+          px * 2 -
+          1 +
+          faceIndex -
+          1 +
+          (py - 1) * 2;
+        y = zDiff * 2 + faceIndex;
       } else {
         face = "t";
       }
