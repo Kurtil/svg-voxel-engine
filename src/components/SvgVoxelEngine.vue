@@ -300,6 +300,20 @@ export default {
         py > this.size - px + orientationX2Offset
       ) {
         face = "r";
+        x = this.getShellRightFaceXCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+        y = this.getShellRightFaceYCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
       } else if (
         py - 1 - orientationYOffset < zDiff && // after the && is not mandatory because it is handled by the first if... not deleted to show the algo
         this.size - px + 1 > py - 1 + orientationY2Offset
@@ -319,29 +333,14 @@ export default {
 
       return `f-${face}-x-${x}-y-${y}`;
     },
-    getShellLeftFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
-      let offset = 0;
-      if (orientation === "top") {
-        if (faceIndex === 1) {
-          offset = 1;
-        } else {
-          offset = -1;
-        }
-      } else if (orientation === "left") {
-        if (faceIndex === 1) {
-          offset = 2;
-        } else {
-          offset = 2;
-        }
-      } else if (orientation === "right") {
-        if (faceIndex === 1) {
-          offset = 1;
-        } else {
-          offset = 1;
-        }
-      }
-      return (zDiff - py) * 2 + faceIndex + offset;
+    getShellRightFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? -1
+          : 0;
+      return offset + px + py - this.size;
     },
+    getShellRightFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {},
     getShellLeftFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
       let offset = 0;
       if (orientation === "top") {
