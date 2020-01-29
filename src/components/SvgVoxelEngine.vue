@@ -61,11 +61,11 @@ export default {
       zSize: 4
     });
 
-    this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
-      xSize: this.size,
-      ySize: this.size,
-      zSize: 7
-    });
+    // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
+    //   xSize: this.size,
+    //   ySize: this.size,
+    //   zSize: 7
+    // });
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
     this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
@@ -252,9 +252,9 @@ export default {
             return "#0000FF";
           }
         };
-        firstPath.color = getFaceColor(firstPath.shellKey) || firstPath.color;
-        secondPath.color =
-          getFaceColor(secondPath.shellKey) || secondPath.color;
+        // firstPath.color = getFaceColor(firstPath.shellKey) || firstPath.color;
+        // secondPath.color =
+        //   getFaceColor(secondPath.shellKey) || secondPath.color;
 
         this.paths.push(firstPath, secondPath);
       });
