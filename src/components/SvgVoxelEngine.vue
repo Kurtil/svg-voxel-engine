@@ -61,11 +61,11 @@ export default {
       zSize: 4
     });
 
-    // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
-    //   xSize: this.size,
-    //   ySize: this.size,
-    //   zSize: 7
-    // });
+    this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
+      xSize: this.size,
+      ySize: this.size,
+      zSize: 7
+    });
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
     this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
@@ -186,7 +186,8 @@ export default {
           path.faceIndex,
           zDiff
         );
-        path.globalGridIndex = `g-index-x-${x}-y-${y}`
+        path.globalGridIndex = (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
+        // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
       });
       // this.paths = [...colorPaths.values()][3]
     },
