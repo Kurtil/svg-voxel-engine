@@ -340,7 +340,29 @@ export default {
           : 0;
       return offset + px + py - this.size;
     },
-    getShellRightFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {},
+    getShellRightFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = -1;
+        } else {
+          offset = 0;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      }
+      return offset + (zDiff - (this.size - px)) * 2;
+    },
     getShellLeftFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
       let offset = 0;
       if (orientation === "top") {
