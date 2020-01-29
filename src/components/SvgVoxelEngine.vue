@@ -347,7 +347,13 @@ export default {
 
       return `f-${face}-x-${x}-y-${y}`;
     },
-    getShellTopFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {},
+    getShellTopFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset =
+        orientation === "left" || (orientation === "right" && faceIndex === 2)
+          ? -1
+          : 0;
+      return offset - zDiff + py;
+    },
     getShellTopFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
       let offset = 0;
       if (orientation === "top") {
