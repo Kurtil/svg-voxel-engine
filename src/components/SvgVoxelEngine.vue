@@ -343,13 +343,11 @@ export default {
       return (zDiff - py) * 2 + faceIndex + offset;
     },
     getShellLeftFaceXCoordinate(px, py, orientation, faceIndex) {
-      return (
-        (orientation === "left" && faceIndex === 2 ? -1 : 0) +
-        px +
-        faceIndex -
-        1 +
-        (py - (orientation === "right" && faceIndex === 1 ? 0 : 1))
-      );
+      const offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? -1
+          : 0;
+      return offset + px + py;
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
