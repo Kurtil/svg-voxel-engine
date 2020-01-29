@@ -80,6 +80,8 @@ export default {
     this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
 
     this.renderVoxels(this.addTriFacePathFromVoxel);
+
+    this.eraseUndershell();
   },
   render(h) {
     return h("div", [
@@ -154,6 +156,16 @@ export default {
     }
   },
   methods: {
+    eraseUndershell() {
+      const shell = new Map();
+      this.paths.forEach(path => {
+        const shellPath = shell.get(path.shellKey);
+        if (!shellPath || shellPath.voxel.zIndex < path.voxel.zIndex) {
+          shell.set(path.shellKey, path);
+        }
+      });
+      this.paths = [...shell.values()];
+    },
     deleteVoxel(voxel) {
       this.deleteVoxels([voxel]);
     },
