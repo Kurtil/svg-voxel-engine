@@ -332,12 +332,11 @@ export default {
     },
     getShellLeftFaceXCoordinate(px, py, orientation, faceIndex) {
       return (
-        (orientation === "left" ? 0 : 1) +
-        px * 2 -
-        1 +
+        (orientation === "left" && faceIndex === 2 ? -1 : 0) +
+        px +
         faceIndex -
         1 +
-        (py - (orientation === "right" && faceIndex === 1 ? 0 : 1)) * 2
+        (py - (orientation === "right" && faceIndex === 1 ? 0 : 1))
       );
     },
     makeSvgPathFromPoints(points) {
