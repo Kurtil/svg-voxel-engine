@@ -82,6 +82,8 @@ export default {
     this.renderVoxels(this.addTriFacePathFromVoxel);
 
     this.eraseUndershell();
+
+    this.mergePaths();
   },
   render(h) {
     return h("div", [
@@ -113,6 +115,7 @@ export default {
                 // TODO for testing purpose
                 click: () => {
                   this.paths = this.paths.filter(p => p !== path);
+                  console.log(`Global index : ${path.globalGridIndex}`);
                   console.log(`Path key : ${path.shellKey}`);
                 }
               }
@@ -156,6 +159,37 @@ export default {
     }
   },
   methods: {
+    mergePaths() {
+      const colorPaths = new Map();
+      this.paths.forEach(path => {
+        if (colorPaths.has(path.color)) {
+          colorPaths.get(path.color).push(path);
+        } else {
+          colorPaths.set(path.color, [path]);
+        }
+        const { x: px, y: py, z: pz } = path.voxel.position;
+        let face = null;
+
+        const zDiff = this.maxZ - pz;
+
+        const x = this.getShellTopFaceXCoordinate(
+          px,
+          py,
+          path.orientation,
+          path.faceIndex,
+          zDiff
+        );
+        const y = this.getShellTopFaceYCoordinate(
+          px,
+          py,
+          path.orientation,
+          path.faceIndex,
+          zDiff
+        );
+        path.globalGridIndex = `g-index-x-${x}-y-${y}`
+      });
+      // this.paths = [...colorPaths.values()][3]
+    },
     eraseUndershell() {
       const shell = new Map();
       this.paths.forEach(path => {
@@ -234,14 +268,18 @@ export default {
           points: paths[0],
           color: this.makeFaceColor(orientation, voxel.color),
           voxel,
-          shellKey: this.getShellKey(voxel, orientation, 1)
+          orientation,
+          shellKey: this.getShellKey(voxel, orientation, 1),
+          faceIndex: 1
         };
         const secondPath = {
           id: `i${voxelIndex}f${orientation}s2`,
           points: paths[1],
           color: this.makeFaceColor(orientation, voxel.color),
           voxel,
-          shellKey: this.getShellKey(voxel, orientation, 2)
+          orientation,
+          shellKey: this.getShellKey(voxel, orientation, 2),
+          faceIndex: 2
         };
         const getFaceColor = face => {
           if (face.match(/f-t/)) {
