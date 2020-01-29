@@ -115,8 +115,9 @@ export default {
                 // TODO for testing purpose
                 click: () => {
                   this.paths = this.paths.filter(p => p !== path);
-                  console.log(`Global index : ${path.globalGridIndex}`);
-                  console.log(`Path key : ${path.shellKey}`);
+                  // console.log(`Global index : ${path.globalGridIndex}`);
+                  // console.log(`Path key : ${path.shellKey}`);
+                  console.log(`Neigbhor of ${path.globalGridIndex} : ${this.getGlobalGridIndexes(path.globalGridIndex)}`)
                 }
               }
             })
@@ -186,10 +187,30 @@ export default {
           path.faceIndex,
           zDiff
         );
-        path.globalGridIndex = (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
+        path.globalGridIndex =
+          (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
         // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
       });
-      // this.paths = [...colorPaths.values()][3]
+      const globalGrid = new Map()
+      this.paths.forEach(path => globalGrid.set(path.globalGridIndex, path));
+      const colorChunks = new Map();
+      [...colorPaths.entries()].forEach(([color, paths]) => {
+        paths.forEach(path => {
+          // TODO stopped here
+        });
+      });
+    },
+    getGlobalGridNeighbor(globalGrid, index) {
+      return this.getGlobalGridIndexes(index).map(i => globalGrid.get(i)).filter(neighbor => !!neighbor);
+    },
+    getGlobalGridIndexes(index) {
+      const offset = (this.size + this.maxZ) * 2 - 1;
+      if (index % 2) {
+        // odd
+        return [index - 1, index + 1, index - offset];
+      } else {
+        return [index + offset, index + 1, index - 1];
+      }
     },
     eraseUndershell() {
       const shell = new Map();
