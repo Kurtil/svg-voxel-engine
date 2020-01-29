@@ -342,6 +342,29 @@ export default {
       }
       return (zDiff - py) * 2 + faceIndex + offset;
     },
+    getShellLeftFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = -1;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      }
+      return offset + (zDiff - py + 1) * 2;
+    },
     getShellLeftFaceXCoordinate(px, py, orientation, faceIndex) {
       const offset =
         orientation === "left" || (orientation === "top" && faceIndex === 1)
