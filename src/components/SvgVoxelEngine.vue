@@ -293,19 +293,23 @@ export default {
         this.size - px + 1 > py - 1 + orientationY2Offset
       ) {
         face = "l";
-        x =
-          (orientation === "top" ? 2 : orientation === "right" ? 2 : 0) +
-          px * 2 -
-          1 +
-          faceIndex -
-          1 +
-          (py - 1) * 2;
+        x = this.getShellLeftFaceXCoordinate(px, py, orientation, faceIndex);
         y = zDiff * 2 + faceIndex;
       } else {
         face = "t";
       }
 
       return `f-${face}-x-${x}-y-${y}`;
+    },
+    getShellLeftFaceXCoordinate(px, py, orientation, faceIndex) {
+      return (
+        (orientation === "left" ? 0 : 1) +
+        px * 2 -
+        1 +
+        faceIndex -
+        1 +
+        (py - (orientation === "right" && faceIndex === 1 ? 0 : 1)) * 2
+      );
     },
     makeSvgPathFromPoints(points) {
       return points.reduce((acc, p, i, arr) => {
