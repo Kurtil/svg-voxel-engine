@@ -1,36 +1,21 @@
-<template>
-  <div class="svgVoxelEngine">
-    <svg :width="width" :height="height" :viewBox="viewBox" fill="transparent">
-      <rect width="100%" height="100%" fill="gray" />
-      <g
-        v-for="voxel of sortedVoxels"
-        :key="voxel.id"
-        v-html="voxel.svgPath"
-        @click.meta="deleteVoxel(voxel)"
-        @click.alt="clear(voxel)"
-        @click.exact="addCloneVoxel($event, voxel)"
-        @mouseover="hoverVoxel($event, voxel)"
-      />
-      <g
-        v-for="voxel of miscVoxels"
-        :key="voxel.id"
-        v-html="voxel.svgPath"
-        style="pointer-events: none;"
-      />
-    </svg>
-  </div>
-</template>
-
 <script>
+/* eslint-disable */
+
 import { lightenColor, hueShift } from "../utils/colors.js";
 
 export default {
   name: "SvgVoxelEngine",
   data() {
     return {
-      voxels: [],
-      miscVoxels: [],
-      objects: []
+      /**
+       * A map of all added voxels.
+       * The map ensure id unicity.
+       */
+      voxels: new Map(),
+      /**
+       * The path to display.
+       */
+      paths: []
     };
   },
   props: {
@@ -45,23 +30,11 @@ export default {
     },
     size: {
       type: Number,
-      default: 32
-    },
-    rise: {
-      type: Number,
-      default: 20
+      default: 16
     },
     depthRatio: {
       type: Number,
       default: 0.5
-    },
-    grid: {
-      type: Boolean,
-      default: true
-    },
-    gridColor: {
-      type: String,
-      default: "#777777"
     },
     lightCfg: {
       type: Object,
@@ -78,81 +51,93 @@ export default {
   created() {
     window.engine = this; // TODO for development only
 
-    if (this.grid) {
-      this.addGrid();
-    }
+    this.addFullSlab(1, "#21C786");
+    // this.addFullSlab(2, "#21C786");
+    // this.addFullSlab(3, "#6D6E71", 5);
 
-    this.makeOptimizedBox({ x: 1, y: 1, z: 1 }, "#35EF7E", {
-      xSize: this.size,
-      ySize: this.size,
-      zSize: 3
+    this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
+      zSize: 4
     });
 
-    this.makeOptimizedBox({ x: 1, y: 1, z: 4 }, "#94979A", {
-      xSize: this.size - 10,
-      ySize: this.size - 10,
-      zSize: 3
+    this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
+      zSize: 4
     });
 
-    // this.makeOptimizedBox({ x: 2, y: 2, z: 1 }, "#94979A", {
-    //   xSize: 3,
-    //   ySize: 6,
-    //   zSize: 9
+    // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
+    //   xSize: this.size,
+    //   ySize: this.size,
+    //   zSize: 7
     // });
 
-    // this.makeBoxObject({ x: 1, y: 1, z: 1 }, "#94979A", {
-    //   xSize: this.size - 2,
-    //   ySize: 7,
-    //   zSize: 8
-    // });
-
-    // this.addVoxel({ x: 2, y: 2, z: 1 });
-    // this.addVoxel({ x: 2, y: 3, z: 1 }, "#FF0000");
-    // this.addVoxel({ x: 3, y: 2, z: 1 }, "#0000FF");
-    // this.addVoxel({ x: 3, y: 3, z: 1 }, "#FFFF00");
-    // this.addVoxel({ x: 2, y: 2, z: 2 }, "#FFA500");
     // this.addVoxel({ x: 2, y: 2, z: 3 });
-    // this.addVoxel({ x: 2, y: 2, z: 5 });
-    // this.addVoxel({ x: 2, y: 2, z: 7 });
+    // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
+    // this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
+    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
 
-    // this.deleteBox(
-    //   { x: 9, y: 8, z: 1 },
-    //   {
-    //     xSize: 6,
-    //     ySize: 8,
-    //     zSize: 7
-    //   }
-    // );
+    // this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
+    // this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
 
-    // this.deleteBox(
-    //   { x: 8, y: 9, z: 1 },
-    //   {
-    //     xSize: 8,
-    //     ySize: 5,
-    //     zSize: 7
-    //   }
-    // );
+    this.renderVoxels(this.addTriFacePathFromVoxel);
 
-    // this.makeBoxObject({ x: 10, y: 10, z: 1 }, "#EE82EE", {
-    //   xSize: 5,
-    //   ySize: 3,
-    //   zSize: 10
-    // });
+    this.eraseUndershell();
 
-    // this.removeDusplicatedVoxelIds();
+    this.chunkAndMergePaths();
+  },
+  render(h) {
+    return h("div", [
+      h(
+        "svg",
+        {
+          attrs: {
+            width: this.width,
+            height: this.height,
+            viewBox: this.viewBox
+          }
+        },
+        [
+          h("rect", {
+            attrs: {
+              width: "100%",
+              height: "100%",
+              fill: "gray"
+            }
+          }),
+          ...this.paths.map(path =>
+            h("path", {
+              key: path.id,
+              attrs: {
+                d: this.makeSvgPathFromPoints(path.points),
+                fill: path.color
+              },
+              on: {
+                // TODO for testing purpose
+                click: () => {
+                  this.paths = this.paths.filter(p => p !== path);
+                  // console.log(`Global index : ${path.globalGridIndex}`);
+                  // console.log(`Path key : ${path.shellKey}`);
+                  console.log(
+                    `Neigbhor of ${
+                      path.globalGridIndex
+                    } : ${this.getGlobalGridIndexes(path.globalGridIndex)}`
+                  );
+                }
+              }
+            })
+          )
+        ]
+      )
+    ]);
   },
   computed: {
-    sortedVoxels() {
-      return Array.from(this.voxels).sort((a, b) => {
-        if (a.zIndex > b.zIndex) {
-          return 1;
-        } else if (a.zIndex < b.zIndex) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-    },
     viewBox() {
       return `
       ${0}
@@ -172,6 +157,12 @@ export default {
     voxelYSize() {
       return this.voxelXSize * this.depthRatio;
     },
+    maxZ() {
+      return [...this.voxels.values()].reduce(
+        (acc, voxel) => (voxel.position.z > acc ? voxel.position.z : acc),
+        0
+      );
+    },
     /**
      * the offset lenght on svg-x axis
      */
@@ -180,56 +171,130 @@ export default {
     }
   },
   methods: {
-    hoverVoxel(event, voxel) {
-      let position = null;
-      if (event.metaKey) {
-        position = voxel.position;
-      } else {
-        const face = event.target.getAttribute("face");
-        if (!face || !["up", "right", "left"].includes(face)) return;
-        position = this.getFaceNeighbourPoition(voxel.position, face);
-      }
-      const hvoxel = this.makeFullVoxel(position, "#FFFFFF", {
-        stroke: true
-      });
-      hvoxel.id = "X" + hvoxel.id;
-      this.miscVoxels = [hvoxel];
-    },
-    getFaceNeighbourPoition(position, face) {
-      const { x, y, z } = position;
-      return {
-        x: x + (face === "right" ? 1 : 0),
-        y: y - (face === "left" ? 1 : 0),
-        z: z + (face === "up" ? 1 : 0)
-      };
-    },
-    addCloneVoxel(clickEvent, voxel) {
-      const face = clickEvent.target.getAttribute("face");
-      if (!face || !["up", "right", "left"].includes(face)) return;
+    chunkAndMergePaths() {
+      const colorPaths = new Map();
+      this.paths.forEach(path => {
+        if (colorPaths.has(path.color)) {
+          colorPaths.get(path.color).push(path);
+        } else {
+          colorPaths.set(path.color, [path]);
+        }
+        const { x: px, y: py, z: pz } = path.voxel.position;
+        let face = null;
 
-      this.addVoxel(
-        this.getFaceNeighbourPoition(voxel.position, face),
-        voxel.color
-      );
-    },
-    addGrid() {
-      this.addFullSlab(0, this.gridColor, {
-        stroke: true,
-        leftFace: false,
-        rightFace: false
+        const zDiff = this.maxZ - pz;
+
+        const x = this.getShellTopFaceXCoordinate(
+          px,
+          py,
+          path.orientation,
+          path.faceIndex,
+          zDiff
+        );
+        const y = this.getShellTopFaceYCoordinate(
+          px,
+          py,
+          path.orientation,
+          path.faceIndex,
+          zDiff
+        );
+        path.globalGridIndex =
+          (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
+        // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
+      });
+      const globalGrid = new Map();
+      this.paths.forEach(path => globalGrid.set(path.globalGridIndex, path));
+      const colorChunks = new Map();
+      [...colorPaths.entries()].forEach(([color, paths]) => {
+        if (!paths.length) return;
+        const globalGridColor = new Map();
+        paths.forEach(path => globalGridColor.set(path.globalGridIndex, path));
+        const getPathNeighborsAndDeleteThem = (path, groupId) => {
+          if (colorChunks.has(`${groupId}-${color}`)) {
+            colorChunks.get(`${groupId}-${color}`).push(path);
+          } else {
+            colorChunks.set(`${groupId}-${color}`, [path]);
+          }
+          globalGridColor.delete(path.globalGridIndex);
+
+          const neighbors = this.getGlobalGridNeighbor(
+            globalGridColor,
+            path.globalGridIndex
+          );
+
+          neighbors.forEach(neighbor =>
+            getPathNeighborsAndDeleteThem(neighbor, groupId)
+          );
+        };
+        let groupId = 1;
+        for (let path of globalGridColor.values()) {
+          getPathNeighborsAndDeleteThem(path, groupId);
+          groupId++;
+        }
+      });
+      // this.paths = [];
+      [...colorChunks.entries()].forEach(([id, chunk]) => {
+        // this.mergePaths(chunk, id);
       });
     },
-    removeDusplicatedVoxelIds() {
-      const uniqueIds = new Map();
-      this.sortedVoxels.forEach(voxel => uniqueIds.set(voxel.id, voxel));
-      this.voxels = [...uniqueIds.values()];
+    mergePaths(paths, id) {
+      const mergedPath = {
+        id,
+        points: []
+      };
+      paths.sort((a, b) =>
+        a.globalGridIndex > b.globalGridIndex
+          ? 1
+          : a.globalGridIndex > b.globalGridIndex
+          ? -1
+          : 0
+      );
+      const pathsToMerge = new Map();
+      paths.forEach(path => pathsToMerge.set(path.globalGridIndex, path));
+      const firstPath = paths[0];
+      const merge = (mergedPath, pathToMerge) => {
+        if (pathToMerge === firstPath) return;
+        const neighbors = this.getGlobalGridNeighbor(
+          pathsToMerge,
+          pathToMerge.globalGridIndex
+        );
+        if (!neighbors.length) {
+          mergedPath.points = path.points;
+        } else {
+          // TODO here is the magic of merging
+          // rotate points to simplify the merge
+          if (pathToMerge.globalGridIndex % 2 === 0) { // TODO this may work only if size is even...
+            const [p1, p2, p3] = pathToMerge.points;
+            pathToMerge.points = [p2, p3, p1];
+          }
+          // TODO stopped here
+        }
+      }
+
     },
-    /**
-     * Remove the voxel and all its siblings if it belongs to an object
-     */
-    clear(voxel = {}) {
-      const voxelsToRemove = voxel.parent ? voxel.parent.voxels : [voxel];
-      this.deleteVoxels(voxelsToRemove);
+    getGlobalGridNeighbor(globalGrid, index) {
+      return this.getGlobalGridIndexes(index)
+        .map(i => globalGrid.get(i))
+        .filter(neighbor => !!neighbor);
+    },
+    getGlobalGridIndexes(index) {
+      const offset = (this.size + this.maxZ) * 2 - 1;
+      if (index % 2) {
+        // odd
+        return [index - 1, index + 1, index - offset];
+      } else {
+        return [index + offset, index + 1, index - 1];
+      }
+    },
+    eraseUndershell() {
+      const shell = new Map();
+      this.paths.forEach(path => {
+        const shellPath = shell.get(path.shellKey);
+        if (!shellPath || shellPath.voxel.zIndex < path.voxel.zIndex) {
+          shell.set(path.shellKey, path);
+        }
+      });
+      this.paths = [...shell.values()];
     },
     deleteVoxel(voxel) {
       this.deleteVoxels([voxel]);
@@ -241,116 +306,386 @@ export default {
       );
       return true;
     },
-    makeFullSlabObject(stage = 1, color = "#00FF00", cfg) {
-      this.objects.push(this.addFullSlab(stage, color, cfg));
-    },
-    addFullSlab(stage = 1, color = "#00FF00", cfg = {}) {
-      const { offset = 0 } = cfg;
-      return this.makeBox(
-        { x: 1 + offset, y: 1 + offset, z: stage },
-        color,
-        {
-          xSize: this.size - 2 * offset,
-          ySize: this.size - 2 * offset,
-          zSize: 1
-        },
-        cfg
-      );
-    },
-    /**
-     * Return the svg y coodrinate of the nth stage.
-     */
-    getStageY(stage) {
-      return (
-        this.height -
-        ((this.size / 2) * this.voxelYSize +
-          this.offset +
-          (stage - 1) * this.voxelYSize)
-      );
-    },
-    getVoxelAt(position) {
-      return this.voxels.find(voxel => voxel.id === this.generateId(position));
-    },
-    makeBoxObject(position, color, sizes) {
-      this.objects.push(this.makeBox(position, color, sizes));
+    addFullSlab(stage = 1, color = "#00FF00", offset = 0) {
+      return this.addBox({ x: 1 + offset, y: 1 + offset, z: stage }, color, {
+        xSize: this.size - 2 * offset,
+        ySize: this.size - 2 * offset,
+        zSize: 1
+      });
     },
     deleteBox(position, sizes) {
       this.getBoxCoordinates(position, sizes).forEach(point =>
         this.deleteVoxel(this.getVoxelAt(point))
       );
     },
-    makeOptimizedBox(position, color, sizes) {
-      const [p1, , p3, p4, p5, p6, p7, p8] = this.getBoxCorners(
-        position,
-        sizes
-      );
-
-      const upFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p5, p6, p7, p8]),
-        this.makeFaceColor("up", color),
-        false,
-        'face="up"'
-      );
-      const rightFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p8, p7, p3, p4]),
-        this.makeFaceColor("right", color),
-        false,
-        'face="right"'
-      );
-      const leftFaceSvgPath = this.makeSvgPath(
-        this.makeFacePath([p1, p5, p8, p4]),
-        this.makeFaceColor("left", color),
-        false,
-        'face="left"'
-      );
-      const svgPath = `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
-
-      this.voxels.push({
-        zIndex: Infinity,
-        svgPath
-      });
-    },
-    getBoxCorners(position, sizes) {
-      const [
-        pos1,
-        ,
-        pos3,
-        pos4,
-        pos5,
-        pos6,
-        pos7,
-        pos8
-      ] = this.getBoxCornersPosition(position, sizes);
-      const p1 = this.getVoxelOrigin(pos1);
-      const p3 = this.getVoxelCoordinates(pos3)[2];
-      const p4 = this.getVoxelCoordinates(pos4)[3];
-      const p5 = this.getVoxelCoordinates(pos5)[4];
-      const p6 = this.getVoxelCoordinates(pos6)[5];
-      const p7 = this.getVoxelCoordinates(pos7)[6];
-      const p8 = this.getVoxelCoordinates(pos8)[7];
-
-      return [p1, null, p3, p4, p5, p6, p7, p8];
-    },
-    getBoxCornersPosition(position, { xSize = 1, ySize = 1, zSize = 1 }) {
-      const { x, y, z } = position;
-      const pos1 = { x, y, z };
-      const pos3 = { x: x + xSize - 1, y: y + ySize - 1, z };
-      const pos4 = { x: x + xSize - 1, y, z };
-      const pos5 = { x, y, z: z + zSize };
-      const pos6 = { x, y: y + ySize - 1, z: z + zSize };
-      const pos7 = { x: x + xSize - 1, y: y + ySize - 1, z: z + zSize };
-      const pos8 = { x: x + xSize - 1, y, z: z + zSize };
-
-      return [pos1, null, pos3, pos4, pos5, pos6, pos7, pos8];
-    },
-    makeBox(position, color, sizes, cfg) {
+    addBox(position, color, sizes) {
       const box = {
         voxels: []
       };
       this.getBoxCoordinates(position, sizes).forEach(point =>
-        box.voxels.push(this.addVoxel(point, color, cfg, box))
+        box.voxels.push(this.addVoxel(point, color))
       );
       return box;
+    },
+    addVoxel(position, color = "#FF0000") {
+      const voxel = this.makeVoxel(position, color);
+      this.voxels.set(voxel.id, voxel);
+      return voxel;
+    },
+    /*******************************/
+    /********** RENDERING **********/
+    /*******************************/
+    /**
+     * Fill paths from voxels.
+     * A displayed path is an object with p1, p2, p3 and color properties.
+     */
+    renderVoxels(voxelRenderFunction) {
+      [...this.voxels.values()]
+        .sort(this.voxelCompareFunction)
+        .forEach(voxelRenderFunction);
+    },
+    addQuadFacePathFromVoxel(voxel, voxelIndex) {
+      Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+        const p1 = paths[0][0];
+        const p2 = paths[0][1];
+        const p3 = orientation === "left" ? paths[1][2] : paths[1][1];
+        const p4 = orientation === "left" ? paths[1][0] : paths[1][2];
+        this.paths.push({
+          id: `i${voxelIndex}f${orientation}`,
+          points: [p1, p2, p3, p4],
+          color: this.makeFaceColor(orientation, voxel.color)
+        });
+      });
+    },
+    addTriFacePathFromVoxel(voxel, voxelIndex) {
+      Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+        const firstPath = {
+          id: `i${voxelIndex}f${orientation}s1`,
+          points: paths[0],
+          color: this.makeFaceColor(orientation, voxel.color),
+          voxel,
+          orientation,
+          shellKey: this.getShellKey(voxel, orientation, 1),
+          faceIndex: 1
+        };
+        const secondPath = {
+          id: `i${voxelIndex}f${orientation}s2`,
+          points: paths[1],
+          color: this.makeFaceColor(orientation, voxel.color),
+          voxel,
+          orientation,
+          shellKey: this.getShellKey(voxel, orientation, 2),
+          faceIndex: 2
+        };
+        const getFaceColor = face => {
+          if (face.match(/f-t/)) {
+            return "#FF0000";
+          } else if (face.match(/f-l/)) {
+            return "#00FF00";
+          } else if (face.match(/f-r/)) {
+            return "#0000FF";
+          }
+        };
+        // firstPath.color = getFaceColor(firstPath.shellKey) || firstPath.color;
+        // secondPath.color =
+        //   getFaceColor(secondPath.shellKey) || secondPath.color;
+
+        this.paths.push(firstPath, secondPath);
+      });
+    },
+    /**
+     * After tri face render.
+     */
+    // optiTest() {
+    //   // Only displayed paths will be kept.
+    //   const shellPaths = new Map();
+    //   [...this.voxels.values()].forEach(voxel => {
+    //     Object.entries(voxel.faces).forEach(([orientation, paths]) => {
+    //       shellPaths.set(this.getShellKey(voxel, orientation, 1), paths[0]);
+    //       shellPaths.set(this.getShellKey(voxel, orientation, 2), paths[1]);
+    //     });
+    //   });
+    // },
+    getShellKey(voxel, orientation, faceIndex) {
+      const { x: px, y: py, z: pz } = voxel.position;
+      let face = null;
+      let x = null;
+      let y = null;
+
+      const zDiff = this.maxZ - pz;
+      const orientationYOffset =
+        orientation === "top" || (orientation === "right" && faceIndex === 1)
+          ? 0
+          : 1;
+      const orientationY2Offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? 0
+          : 1;
+      const orientationXOffset =
+        orientation === "top" || (orientation === "left" && faceIndex === 1)
+          ? 0
+          : 1;
+      const orientationX2Offset =
+        orientation === "right" || (orientation === "top" && faceIndex === 2)
+          ? 0
+          : 1;
+      if (
+        this.size - px - orientationXOffset < zDiff &&
+        py > this.size - px + orientationX2Offset
+      ) {
+        face = "r";
+        x = this.getShellRightFaceXCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+        y = this.getShellRightFaceYCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+      } else if (
+        py - 1 - orientationYOffset < zDiff && // after the && is not mandatory because it is handled by the first if... not deleted to show the algo
+        this.size - px + 1 > py - 1 + orientationY2Offset
+      ) {
+        face = "l";
+        x = this.getShellLeftFaceXCoordinate(px, py, orientation, faceIndex);
+        y = this.getShellLeftFaceYCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+      } else {
+        face = "t";
+        x = this.getShellTopFaceXCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+        y = this.getShellTopFaceYCoordinate(
+          px,
+          py,
+          orientation,
+          faceIndex,
+          zDiff
+        );
+      }
+
+      return `f-${face}-x-${x}-y-${y}`;
+    },
+    getShellTopFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset =
+        orientation === "left" || (orientation === "right" && faceIndex === 2)
+          ? -1
+          : 0;
+      return offset - zDiff + py;
+    },
+    getShellTopFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = -1;
+        } else {
+          offset = 0;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      }
+      return offset + (px + zDiff) * 2;
+    },
+    getShellRightFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? -1
+          : 0;
+      return offset + px + py - this.size;
+    },
+    getShellRightFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = -1;
+        } else {
+          offset = 0;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      }
+      return offset + (zDiff - (this.size - px)) * 2;
+    },
+    getShellLeftFaceYCoordinate(px, py, orientation, faceIndex, zDiff) {
+      let offset = 0;
+      if (orientation === "top") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = -1;
+        }
+      } else if (orientation === "left") {
+        if (faceIndex === 1) {
+          offset = 1;
+        } else {
+          offset = 2;
+        }
+      } else if (orientation === "right") {
+        if (faceIndex === 1) {
+          offset = 0;
+        } else {
+          offset = 1;
+        }
+      }
+      return offset + (zDiff - py + 1) * 2;
+    },
+    getShellLeftFaceXCoordinate(px, py, orientation, faceIndex) {
+      const offset =
+        orientation === "left" || (orientation === "top" && faceIndex === 1)
+          ? -1
+          : 0;
+      return offset + px + py;
+    },
+    makeSvgPathFromPoints(points) {
+      return points.reduce((acc, p, i, arr) => {
+        return acc + `${p.x} ${p.y}${i === arr.length - 1 ? "Z" : "L"}`;
+      }, "M");
+    },
+    /*************************************/
+    /********** VOXEL FACTORIES **********/
+    /*************************************/
+    makeVoxel(position, color) {
+      return {
+        id: this.generateId(position),
+        position,
+        color,
+        zIndex: this.getZIndex(position),
+        faces: this.makeVoxelFaces(position)
+      };
+    },
+    /**
+     * Returns the voxel faces.
+     * A face is an array of two paths.
+     * A path is an array of three points.
+     */
+    makeVoxelFaces(position) {
+      const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
+      return {
+        top: [
+          [p5, p6, p8],
+          [p6, p7, p8]
+        ],
+        right: [
+          [p8, p7, p3],
+          [p8, p3, p4]
+        ],
+        left: [
+          [p5, p8, p1],
+          [p1, p8, p4]
+        ]
+      };
+    },
+    /***************************/
+    /********** UTILS **********/
+    /***************************/
+    generateId(position) {
+      return `voxel-x${position.x}-y${position.y}-z${position.z}`;
+    },
+    /**
+     * Used to sort voxel by zIndex
+     */
+    voxelCompareFunction(a, b) {
+      if (a.zIndex > b.zIndex) {
+        return 1;
+      } else if (a.zIndex < b.zIndex) {
+        return -1;
+      } else {
+        return 0;
+      }
+    },
+    /*******************************/
+    /********** POSITIONS **********/
+    /*******************************/
+    getVoxelAt(position) {
+      return this.voxels.find(voxel => voxel.id === this.generateId(position));
+    },
+    getZIndex(position) {
+      const { x, y, z } = position;
+      const maxPerStage = z * (this.size * 2 - 1);
+      return maxPerStage - (this.size - x) - (y - 1);
+    },
+    /****************************/
+    /********** COLORS **********/
+    /****************************/
+    /**
+     * Lighten or darken face sepending on light configuration
+     */
+    makeFaceColor(face, color) {
+      const {
+        light = 10,
+        lightFace = "top",
+        lightHue = 5,
+        shadow = 30,
+        shadowFace = "right",
+        shadowHue = 20
+      } = this.lightCfg;
+      if (face === lightFace) {
+        return this.lightenColor(hueShift(color, lightHue), light);
+      } else if (face === shadowFace) {
+        return this.darkenColor(hueShift(color, shadowHue), shadow);
+      } else {
+        return color;
+      }
+    },
+    darkenColor(color, amount) {
+      return lightenColor(color, -amount);
+    },
+    lightenColor(color, amount) {
+      return lightenColor(color, amount);
+    },
+    /*********************************/
+    /********** COORDINATES **********/
+    /*********************************/
+    /**
+     * Returns the coordinates of the voxel.
+     * @return coordinates - an array of 8 value representing the 0 - 0 point, the 0 - 1 point ...
+     * The 4 first values are the bottom points, the 4 last are the top ones
+     */
+    getVoxelCoordinates(position) {
+      const origin = this.getVoxelOrigin(position);
+      const bottomFaceCoordinates = this.getHorizontalFaceCoordinates(origin);
+      return [
+        ...bottomFaceCoordinates,
+        ...bottomFaceCoordinates.map(({ x, y }) => ({
+          x,
+          y: y - this.voxelYSize
+        }))
+      ];
     },
     getBoxCoordinates(position, { xSize = 1, ySize = 1, zSize = 1 }) {
       const { x, y, z } = position;
@@ -364,113 +699,10 @@ export default {
       }
       return boxCoordinates;
     },
-    addVoxel(position, color = "#FF0000", cfg, parent) {
-      const voxel = this.makeFullVoxel(position, color, cfg, parent);
-      this.voxels.push(voxel);
-      return voxel;
-    },
-    makeFullVoxel(position, color, cfg, parent = null) {
-      return {
-        id: this.generateId(position),
-        position,
-        color,
-        svgPath: this.makeVoxelSvgPath(position, color, cfg),
-        zIndex: this.getZIndex(position),
-        parent
-      };
-    },
-    generateId(position) {
-      return `voxel-x${position.x}-y${position.y}-z${position.z}`;
-    },
-    getZIndex(position) {
-      const { x, y, z } = position;
-      const maxPerStage = z * (this.size * 2 - 1);
-      return maxPerStage - (this.size - x) - (y - 1);
-    },
-    makeVoxelSvgPath(
-      position,
-      color,
-      { rightFace = true, leftFace = true, upFace = true, stroke = false } = {}
-    ) {
-      const [p1, , p3, p4, p5, p6, p7, p8] = this.getVoxelCoordinates(position);
-      const upFaceSvgPath = upFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p5, p6, p7, p8]),
-            this.makeFaceColor("up", color),
-            stroke,
-            'face="up"'
-          )
-        : "";
-      const rightFaceSvgPath = rightFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p8, p7, p3, p4]),
-            this.makeFaceColor("right", color),
-            stroke,
-            'face="right"'
-          )
-        : "";
-      const leftFaceSvgPath = leftFace
-        ? this.makeSvgPath(
-            this.makeFacePath([p1, p5, p8, p4]),
-            this.makeFaceColor("left", color),
-            stroke,
-            'face="left"'
-          )
-        : "";
-      return `<g>${upFaceSvgPath}${rightFaceSvgPath}${leftFaceSvgPath}</g>`;
-    },
     /**
-     * Lighten or darken face sepending on light configuration
+     * Return 4 points (top face) from an origin point (voxel x0 y0)
      */
-    makeFaceColor(face, color) {
-      const {
-        light = 10,
-        lightFace = "up",
-        lightHue = 5,
-        shadow = 30,
-        shadowFace = "right",
-        shadowHue = 20
-      } = this.lightCfg;
-      if (face === lightFace) {
-        return lightenColor(hueShift(color, lightHue), light);
-      } else if (face === shadowFace) {
-        return this.darkenColor(hueShift(color, shadowHue), shadow);
-      } else {
-        return color;
-      }
-    },
-    makeSvgPath(path, color, stroke, args = "") {
-      return `<path d="${path}" ${
-        stroke ? "stroke" : "fill"
-      }="${color}" ${args}/>`;
-    },
-    darkenColor(color, amount) {
-      return lightenColor(color, -amount);
-    },
-    makeFacePath(points) {
-      const [p1, p2, p3, p4] = points;
-      return `M${p1.x} ${p1.y}L${p2.x} ${p2.y}L${p3.x} ${p3.y}L${p4.x} ${p4.y}Z`;
-    },
-    /**
-     * Returns the coordinates of the voxel.
-     * @return coordinates - an array of 8 value representing the 0 - 0 point, the 0 - 1 point ...
-     * The 4 first values are the bottom points, the 4 last are the top ones
-     */
-    getVoxelCoordinates(position) {
-      const origin = this.getVoxelOrigin(position);
-      const bottomFaceCoordinates = this.makeHorizontalFaceCoordinates(origin);
-      return [
-        ...bottomFaceCoordinates,
-        ...bottomFaceCoordinates.map(({ x, y }) => ({
-          x,
-          y: y - this.voxelYSize
-        }))
-      ];
-    },
-    /**
-     * Return 4 points (up face) from an origin point (voxel x0 y0)
-     */
-    makeHorizontalFaceCoordinates(origin) {
+    getHorizontalFaceCoordinates(origin) {
       const { x, y } = origin;
       return [
         { x, y },
@@ -500,9 +732,18 @@ export default {
           (1 / 2) * this.voxelYSize * (x - 1) -
           (1 / 2) * this.voxelYSize * (y - 1)
       };
+    },
+    /**
+     * Return the svg y coodrinate of the nth stage.
+     */
+    getStageY(stage) {
+      return (
+        this.height -
+        ((this.size / 2) * this.voxelYSize +
+          this.offset +
+          (stage - 1) * this.voxelYSize)
+      );
     }
   }
 };
 </script>
-
-<style scoped lang="scss"></style>
