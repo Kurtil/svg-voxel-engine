@@ -326,6 +326,7 @@ export default {
         return [edge1, edge2, edge3];
       } else {
         const edge1 = {
+          path,
           vertice1: {
             x: x,
             y: Math.floor(y / 2),
@@ -338,6 +339,7 @@ export default {
           }
         };
         const edge2 = {
+          path,
           vertice1: {
             x: x,
             y: Math.floor(y / 2) + 1,
@@ -350,6 +352,7 @@ export default {
           }
         };
         const edge3 = {
+          path,
           vertice1: {
             x: x - 1,
             y: Math.floor(y / 2) + 1,
