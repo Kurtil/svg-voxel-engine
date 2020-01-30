@@ -51,21 +51,21 @@ export default {
   created() {
     window.engine = this; // TODO for development only
 
-    this.addFullSlab(1, "#21C786");
+    // this.addFullSlab(1, "#21C786");
     // this.addFullSlab(2, "#21C786");
     // this.addFullSlab(3, "#6D6E71", 5);
 
-    this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
-      xSize: 6,
-      ySize: 6,
-      zSize: 4
-    });
+    // this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
+    //   xSize: 6,
+    //   ySize: 6,
+    //   zSize: 4
+    // });
 
-    this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
-      xSize: 6,
-      ySize: 6,
-      zSize: 4
-    });
+    // this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
+    //   xSize: 6,
+    //   ySize: 6,
+    //   zSize: 4
+    // });
 
     // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
     //   xSize: this.size,
@@ -77,6 +77,12 @@ export default {
     this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 4, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 4, y: 5, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 5, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 5, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 4, y: 6, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 6, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
@@ -239,13 +245,14 @@ export default {
           groupId++;
         }
       });
-      // this.paths = [];
+      this.paths = [];
       console.log(colorChunks);
       [...colorChunks.entries()].forEach(([id, chunk]) => {
         this.mergePaths(chunk, id);
       });
     },
     mergePaths(paths, id) {
+      const color = paths[0].color;
       // TODO from points to edges
       // Edges should be in top face coordinate
       const edges = paths.flatMap(path => this.getEdgesFromPathPoints(path));
@@ -274,7 +281,60 @@ export default {
         }
       });
 
-      const shellEdges = [...shellPathEdges.values()];
+      let shellEdges = [...shellPathEdges.values()];
+      // get top edge (with the smallest path gIndex)
+      const firstEdge = shellEdges.reduce((acc, cur) =>
+        acc.path.globalGridIndex > cur.path.globalGridIndex ? acc : cur
+      );
+      shellEdges = shellEdges.filter(shellEdge => shellEdge !== firstEdge);
+      // Rotate clockwise and merge paths points by points
+      // TODO hole will be difficult to handle
+      // TODO linear line should be only two points
+
+      // Check if firstEdge is in the good direction
+      if (
+        firstEdge.vertice1.x + firstEdge.vertice1.y >
+        firstEdge.vertice2.x + firstEdge.vertice2.y
+      ) {
+        const vertice1 = firstEdge.vertice1;
+        firstEdge.vertice1 = firstEdge.vertice2;
+        firstEdge.vertice2 = vertice1;
+      }
+
+      const pathPoints = [firstEdge.vertice1];
+
+      let lastEdge = firstEdge;
+      while (shellEdges.length) {
+        const lastPoint = lastEdge.vertice2;
+        const nextEdge = shellEdges.filter(
+          shellEdge =>
+            (shellEdge.vertice1.x === lastPoint.x &&
+              shellEdge.vertice1.y === lastPoint.y) ||
+            (shellEdge.vertice2.x === lastPoint.x &&
+              shellEdge.vertice2.y === lastPoint.y)
+        )[0]; // TODO handle multi points
+        if (!nextEdge) {
+          console.log("no next edge...");
+          break;
+        }
+        if (
+          nextEdge.vertice2.x === lastPoint.x &&
+          nextEdge.vertice2.y === lastPoint.y
+        ) {
+          const vertice1 = nextEdge.vertice1;
+          nextEdge.vertice1 = nextEdge.vertice2;
+          nextEdge.vertice2 = vertice1;
+        }
+        pathPoints.push(nextEdge.vertice1);
+        lastEdge = nextEdge;
+        shellEdges = shellEdges.filter(shellEdge => shellEdge !== nextEdge);
+      }
+
+      this.paths.push({
+        id,
+        color,
+        points: pathPoints.map(pathPoint => pathPoint.p)
+      });
     },
     getEdgesFromPathPoints(path) {
       const {
@@ -329,12 +389,12 @@ export default {
           path,
           vertice1: {
             x: x,
-            y: Math.floor(y / 2),
+            y: Math.floor(y / 2) - 1,
             p: p1
           },
           vertice2: {
             x: x,
-            y: Math.floor(y / 2) + 1,
+            y: Math.floor(y / 2),
             p: p2
           }
         };
@@ -342,12 +402,12 @@ export default {
           path,
           vertice1: {
             x: x,
-            y: Math.floor(y / 2) + 1,
+            y: Math.floor(y / 2),
             p: p2
           },
           vertice2: {
             x: x - 1,
-            y: Math.floor(y / 2) + 1,
+            y: Math.floor(y / 2),
             p: p3
           }
         };
@@ -355,12 +415,12 @@ export default {
           path,
           vertice1: {
             x: x - 1,
-            y: Math.floor(y / 2) + 1,
+            y: Math.floor(y / 2),
             p: p3
           },
           vertice2: {
             x: x,
-            y: Math.floor(y / 2),
+            y: Math.floor(y / 2) - 1,
             p: p1
           }
         };
