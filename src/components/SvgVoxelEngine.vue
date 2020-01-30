@@ -74,7 +74,9 @@ export default {
     // });
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
-    // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 4, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 4, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
@@ -122,13 +124,16 @@ export default {
                 // TODO for testing purpose
                 click: () => {
                   this.paths = this.paths.filter(p => p !== path);
-                  // console.log(`Global index : ${path.globalGridIndex}`);
-                  // console.log(`Path key : ${path.shellKey}`);
+                  console.log(`Global index : ${path.globalGridIndex}`);
                   console.log(
-                    `Neigbhor of ${
-                      path.globalGridIndex
-                    } : ${this.getGlobalGridIndexes(path.globalGridIndex)}`
+                    `Top face X : ${path.topFaceX} - Top face Y : ${path.topFaceY}`
                   );
+                  // console.log(`Path key : ${path.shellKey}`);
+                  // console.log(
+                  //   `Neigbhor of ${
+                  //     path.globalGridIndex
+                  //   } : ${this.getGlobalGridIndexes(path.globalGridIndex)}`
+                  // );
                 }
               }
             })
@@ -235,44 +240,106 @@ export default {
         }
       });
       // this.paths = [];
+      console.log(colorChunks);
       [...colorChunks.entries()].forEach(([id, chunk]) => {
-        // this.mergePaths(chunk, id);
+        this.mergePaths(chunk, id);
       });
     },
     mergePaths(paths, id) {
-      const mergedPath = {
-        id,
-        points: []
-      };
-      paths.sort((a, b) =>
-        a.globalGridIndex > b.globalGridIndex
-          ? 1
-          : a.globalGridIndex > b.globalGridIndex
-          ? -1
-          : 0
-      );
-      const pathsToMerge = new Map();
-      paths.forEach(path => pathsToMerge.set(path.globalGridIndex, path));
-      const firstPath = paths[0];
-      const merge = (mergedPath, pathToMerge) => {
-        if (pathToMerge === firstPath) return;
-        const neighbors = this.getGlobalGridNeighbor(
-          pathsToMerge,
-          pathToMerge.globalGridIndex
-        );
-        if (!neighbors.length) {
-          mergedPath.points = path.points;
-        } else {
-          // TODO here is the magic of merging
-          // rotate points to simplify the merge
-          if (pathToMerge.globalGridIndex % 2 === 0) { // TODO this may work only if size is even...
-            const [p1, p2, p3] = pathToMerge.points;
-            pathToMerge.points = [p2, p3, p1];
+      // TODO from points to edges
+      // Edges should be in top face coordinate
+      const edges = paths.flatMap(path => this.getEdgesFromPathPoints(path));
+      // console.log(
+      //   edges.map(
+      //     edge =>
+      //       `v1-x-${edge.vertice1.x}-y-${edge.vertice1.y} --- v2-x-${edge.vertice2.x}-y-${edge.vertice2.y}`
+      //   )
+      // );
+    },
+    getEdgesFromPathPoints(path) {
+      const {
+        topFaceX: x,
+        topFaceY: y,
+        points: [p1, p2, p3]
+      } = path;
+      if (path.globalGridIndex % 2) {
+        // TODO may only work on even size
+        const edge1 = {
+          vertice1: {
+            x: x - 1,
+            y: Math.floor(y / 2),
+            p: p1
+          },
+          vertice2: {
+            x: x,
+            y: Math.floor(y / 2),
+            p: p2
           }
-          // TODO stopped here
-        }
+        };
+        const edge2 = {
+          vertice1: {
+            x: x,
+            y: Math.floor(y / 2),
+            p: p2
+          },
+          vertice2: {
+            x: x - 1,
+            y: Math.floor(y / 2) + 1,
+            p: p3
+          }
+        };
+        const edge3 = {
+          vertice1: {
+            x: x - 1,
+            y: Math.floor(y / 2) + 1,
+            p: p3
+          },
+          vertice2: {
+            x: x - 1,
+            y: Math.floor(y / 2),
+            p: p1
+          }
+        };
+        return [edge1, edge2, edge3];
+      } else {
+        const edge1 = {
+          vertice1: {
+            x: x,
+            y: Math.floor(y / 2),
+            p: p1
+          },
+          vertice2: {
+            x: x,
+            y: Math.floor(y / 2) + 1,
+            p: p2
+          }
+        };
+        const edge2 = {
+          vertice1: {
+            x: x,
+            y: Math.floor(y / 2) + 1,
+            p: p2
+          },
+          vertice2: {
+            x: x - 1,
+            y: Math.floor(y / 2) + 1,
+            p: p3
+          }
+        };
+        const edge3 = {
+          vertice1: {
+            x: x - 1,
+            y: Math.floor(y / 2) + 1,
+            p: p3
+          },
+          vertice2: {
+            x: x,
+            y: Math.floor(y / 2),
+            p: p1
+          }
+        };
+        return [edge1, edge2, edge3];
       }
-
     },
     getGlobalGridNeighbor(globalGrid, index) {
       const neighbors = [];
