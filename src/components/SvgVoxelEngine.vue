@@ -273,9 +273,14 @@ export default {
 
     },
     getGlobalGridNeighbor(globalGrid, index) {
-      return this.getGlobalGridIndexes(index)
-        .map(i => globalGrid.get(i))
-        .filter(neighbor => !!neighbor);
+      const neighbors = [];
+      this.getGlobalGridIndexes(index).forEach((globalGridIndex, i) => {
+        const path = globalGrid.get(globalGridIndex);
+        if (path) {
+          neighbors[i] = path;
+        }
+      });
+      return neighbors;
     },
     getGlobalGridIndexes(index) {
       const offset = (this.size + this.maxZ) * 2 - 1;
