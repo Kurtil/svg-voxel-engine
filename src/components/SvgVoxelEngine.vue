@@ -237,8 +237,45 @@ export default {
         // this.mergePaths(chunk, id);
       });
     },
+    mergePaths(paths, id) {
+      const mergedPath = {
+        id,
+        points: []
+      };
+      paths.sort((a, b) =>
+        a.globalGridIndex > b.globalGridIndex
+          ? 1
+          : a.globalGridIndex > b.globalGridIndex
+          ? -1
+          : 0
+      );
+      const pathsToMerge = new Map();
+      paths.forEach(path => pathsToMerge.set(path.globalGridIndex, path));
+      const firstPath = paths[0];
+      const merge = (mergedPath, pathToMerge) => {
+        if (pathToMerge === firstPath) return;
+        const neighbors = this.getGlobalGridNeighbor(
+          pathsToMerge,
+          pathToMerge.globalGridIndex
+        );
+        if (!neighbors.length) {
+          mergedPath.points = path.points;
+        } else {
+          // TODO here is the magic of merging
+          // rotate points to simplify the merge
+          if (pathToMerge.globalGridIndex % 2 === 0) { // TODO this may work only if size is even...
+            const [p1, p2, p3] = pathToMerge.points;
+            pathToMerge.points = [p2, p3, p1];
+          }
+          // TODO stopped here
+        }
+      }
+
+    },
     getGlobalGridNeighbor(globalGrid, index) {
-      return this.getGlobalGridIndexes(index).map(i => globalGrid.get(i)).filter(neighbor => !!neighbor);
+      return this.getGlobalGridIndexes(index)
+        .map(i => globalGrid.get(i))
+        .filter(neighbor => !!neighbor);
     },
     getGlobalGridIndexes(index) {
       const offset = (this.size + this.maxZ) * 2 - 1;
