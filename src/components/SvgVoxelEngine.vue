@@ -52,38 +52,45 @@ export default {
     window.engine = this; // TODO for development only
 
     this.addFullSlab(1, "#21C786");
-    this.addFullSlab(2, "#21C786");
-    this.addFullSlab(3, "#6D6E71", 5);
+    // this.addFullSlab(2, "#21C786");
+    // this.addFullSlab(3, "#6D6E71", 5);
 
-    this.addBox({ x: 1, y: this.size - 4, z: 3 }, "#0000FF", {
-      xSize: 5,
-      ySize: 5,
+    this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
       zSize: 4
     });
 
-    this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
-      xSize: this.size,
-      ySize: this.size,
-      zSize: 7
+    this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
+      zSize: 4
     });
 
-    // this.addVoxel({ x: 2, y: 2, z: 3 });
-    this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
-    this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
-    this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
+    // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
+    //   xSize: this.size,
+    //   ySize: this.size,
+    //   zSize: 7
+    // });
 
-    this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
-    this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
+    // this.addVoxel({ x: 2, y: 2, z: 3 });
+    // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
+    // this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
+    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
+
+    // this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
+    // this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
 
     this.renderVoxels(this.addTriFacePathFromVoxel);
 
     this.eraseUndershell();
 
-    this.mergePaths();
+    this.chunkAndMergePaths();
   },
   render(h) {
     return h("div", [
@@ -117,7 +124,11 @@ export default {
                   this.paths = this.paths.filter(p => p !== path);
                   // console.log(`Global index : ${path.globalGridIndex}`);
                   // console.log(`Path key : ${path.shellKey}`);
-                  console.log(`Neigbhor of ${path.globalGridIndex} : ${this.getGlobalGridIndexes(path.globalGridIndex)}`)
+                  console.log(
+                    `Neigbhor of ${
+                      path.globalGridIndex
+                    } : ${this.getGlobalGridIndexes(path.globalGridIndex)}`
+                  );
                 }
               }
             })
@@ -160,7 +171,7 @@ export default {
     }
   },
   methods: {
-    mergePaths() {
+    chunkAndMergePaths() {
       const colorPaths = new Map();
       this.paths.forEach(path => {
         if (colorPaths.has(path.color)) {
@@ -191,13 +202,39 @@ export default {
           (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
         // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
       });
-      const globalGrid = new Map()
+      const globalGrid = new Map();
       this.paths.forEach(path => globalGrid.set(path.globalGridIndex, path));
       const colorChunks = new Map();
       [...colorPaths.entries()].forEach(([color, paths]) => {
-        paths.forEach(path => {
-          // TODO stopped here
-        });
+        if (!paths.length) return;
+        const globalGridColor = new Map();
+        paths.forEach(path => globalGridColor.set(path.globalGridIndex, path));
+        const getPathNeighborsAndDeleteThem = (path, groupId) => {
+          if (colorChunks.has(`${groupId}-${color}`)) {
+            colorChunks.get(`${groupId}-${color}`).push(path);
+          } else {
+            colorChunks.set(`${groupId}-${color}`, [path]);
+          }
+          globalGridColor.delete(path.globalGridIndex);
+
+          const neighbors = this.getGlobalGridNeighbor(
+            globalGridColor,
+            path.globalGridIndex
+          );
+
+          neighbors.forEach(neighbor =>
+            getPathNeighborsAndDeleteThem(neighbor, groupId)
+          );
+        };
+        let groupId = 1;
+        for (let path of globalGridColor.values()) {
+          getPathNeighborsAndDeleteThem(path, groupId);
+          groupId++;
+        }
+      });
+      // this.paths = [];
+      [...colorChunks.entries()].forEach(([id, chunk]) => {
+        // this.mergePaths(chunk, id);
       });
     },
     getGlobalGridNeighbor(globalGrid, index) {
