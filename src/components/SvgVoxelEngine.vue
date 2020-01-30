@@ -198,6 +198,8 @@ export default {
           path.faceIndex,
           zDiff
         );
+        path.topFaceX = x + this.maxZ;
+        path.topFaceY = y;
         path.globalGridIndex =
           (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
         // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
