@@ -255,6 +255,26 @@ export default {
       //       `v1-x-${edge.vertice1.x}-y-${edge.vertice1.y} --- v2-x-${edge.vertice2.x}-y-${edge.vertice2.y}`
       //   )
       // );
+
+      // Duplicated edges are chunk inner edges and are not relevant to the shell path
+      const shellPathEdges = new Map();
+      edges.forEach(edge => {
+        const {
+          vertice1: { x: x1, y: y1 },
+          vertice2: { x: x2, y: y2 }
+        } = edge;
+        if (
+          shellPathEdges.has(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`) ||
+          shellPathEdges.has(`x1-${x2}-y1-${y2}-x2-${x1}-y2-${y1}`)
+        ) {
+          shellPathEdges.delete(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`);
+          shellPathEdges.delete(`x1-${x2}-y1-${y2}-x2-${x1}-y2-${y1}`);
+        } else {
+          shellPathEdges.set(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`, edge);
+        }
+      });
+
+      const shellEdges = [...shellPathEdges.values()];
     },
     getEdgesFromPathPoints(path) {
       const {
