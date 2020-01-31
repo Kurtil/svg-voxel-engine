@@ -51,21 +51,21 @@ export default {
   created() {
     window.engine = this; // TODO for development only
 
-    // this.addFullSlab(1, "#21C786");
+    this.addFullSlab(1, "#21C786");
     // this.addFullSlab(2, "#21C786");
     // this.addFullSlab(3, "#6D6E71", 5);
 
-    // this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
-    //   xSize: 6,
-    //   ySize: 6,
-    //   zSize: 4
-    // });
+    this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
+      zSize: 4
+    });
 
-    // this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
-    //   xSize: 6,
-    //   ySize: 6,
-    //   zSize: 4
-    // });
+    this.addBox({ x: this.size - 5, y: 1, z: 2 }, "#0000FF", {
+      xSize: 6,
+      ySize: 6,
+      zSize: 4
+    });
 
     // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
     //   xSize: this.size,
@@ -74,13 +74,13 @@ export default {
     // });
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
-    this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 4, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 4, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 4, y: 5, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 4, y: 5, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 5, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 5, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 4, y: 6, z: 3 }, "#FFFF00");
+    // this.addVoxel({ x: 4, y: 6, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 6, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
@@ -184,12 +184,14 @@ export default {
   methods: {
     chunkAndMergePaths() {
       const colorPaths = new Map();
+      // regroup by color
       this.paths.forEach(path => {
         if (colorPaths.has(path.color)) {
           colorPaths.get(path.color).push(path);
         } else {
           colorPaths.set(path.color, [path]);
         }
+        // add path top face x and y coordinate and global grid index
         const { x: px, y: py, z: pz } = path.voxel.position;
         let face = null;
 
@@ -217,6 +219,7 @@ export default {
       });
       const globalGrid = new Map();
       this.paths.forEach(path => globalGrid.set(path.globalGridIndex, path));
+      // chunk paths with direct neigbhors
       const colorChunks = new Map();
       [...colorPaths.entries()].forEach(([color, paths]) => {
         if (!paths.length) return;
@@ -228,19 +231,23 @@ export default {
           } else {
             colorChunks.set(`${groupId}-${color}`, [path]);
           }
-          globalGridColor.delete(path.globalGridIndex);
 
           const neighbors = this.getGlobalGridNeighbor(
             globalGridColor,
             path.globalGridIndex
           );
 
-          neighbors.forEach(neighbor =>
-            getPathNeighborsAndDeleteThem(neighbor, groupId)
-          );
+          neighbors.forEach(neighbor => {
+            globalGridColor.delete(neighbor.globalGridIndex);
+          });
+
+          neighbors.forEach(neighbor => {
+            getPathNeighborsAndDeleteThem(neighbor, groupId);
+          });
         };
         let groupId = 1;
         for (let path of globalGridColor.values()) {
+          globalGridColor.delete(path.globalGridIndex);
           getPathNeighborsAndDeleteThem(path, groupId);
           groupId++;
         }
