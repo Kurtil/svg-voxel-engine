@@ -52,8 +52,6 @@ export default {
     window.engine = this; // TODO for development only
 
     this.addFullSlab(1, "#21C786");
-    // this.addFullSlab(2, "#21C786");
-    // this.addFullSlab(3, "#6D6E71", 5);
 
     this.addBox({ x: 1, y: this.size - 5, z: 2 }, "#0000FF", {
       xSize: 6,
@@ -81,14 +79,6 @@ export default {
     this.addVoxel({ x: 10, y: 1, z: 4 }, "#0000FF");
     this.addVoxel({ x: 11, y: 0, z: 4 }, "#FF0000");
 
-    // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
-    //   xSize: this.size,
-    //   ySize: this.size,
-    //   zSize: 7
-    // });
-
-    // this.addVoxel({ x: 2, y: 2, z: 3 });
-    // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 4, z: 2 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 4, z: 2 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 5, z: 2 }, "#FFFF00");
@@ -97,11 +87,7 @@ export default {
     this.addVoxel({ x: 8, y: 5, z: 2 }, "#FFFF00");
     this.addVoxel({ x: 5, y: 6, z: 2 }, "#FFFF00");
     this.addVoxel({ x: 6, y: 6, z: 2 }, "#FFFF00");
-    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
-    // this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
+
     this.addVoxel({ x: 1, y: 1, z: 2 }, "#00FFFF");
     this.addVoxel({ x: 1, y: 2, z: 2 }, "#00FFFF");
     this.addVoxel({ x: 1, y: 3, z: 2 }, "#00FFFF");
@@ -110,10 +96,6 @@ export default {
     this.addVoxel({ x: 3, y: 2, z: 2 }, "#00FFFF");
     this.addVoxel({ x: 3, y: 1, z: 2 }, "#00FFFF");
     this.addVoxel({ x: 2, y: 1, z: 2 }, "#00FFFF");
-
-    // this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
-    // this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: this.size - 4, y: this.size - 4, z: 3 }, "#2bfafa");
 
     this.renderVoxels(this.addTriFacePathFromVoxel);
 
