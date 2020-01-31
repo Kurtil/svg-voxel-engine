@@ -15,7 +15,7 @@ export default ({
   depthRatio = 0.5,
   lightCfg = {},
   voxelOffset = 1
-}) => ({
+} = {}) => ({
   width,
   height,
   size,
@@ -348,13 +348,8 @@ export default ({
     });
     this.paths = [...shell.values()];
   },
-  deleteVoxel(voxel) {
-    this.deleteVoxels([voxel]);
-  },
-  deleteVoxels(voxelsToRemove) {
-    if (!voxelsToRemove || !voxelsToRemove.length) return false;
-    this.voxels = this.voxels.filter(voxel => !voxelsToRemove.includes(voxel));
-    return true;
+  deleteVoxel(position) {
+    this.voxels.delete(this.generateId(position));
   },
   addFullSlab(stage = 1, color = "#00FF00", offset = 0) {
     return this.addBox({ x: 1 + offset, y: 1 + offset, z: stage }, color, {
@@ -365,7 +360,7 @@ export default ({
   },
   deleteBox(position, sizes) {
     this.getBoxCoordinates(position, sizes).forEach(point =>
-      this.deleteVoxel(this.getVoxelAt(point))
+      this.deleteVoxel(point)
     );
   },
   addBox(position, color, sizes) {
@@ -397,22 +392,28 @@ export default ({
       targetElement = document.createElement("div");
       document.body.appendChild(targetElement);
     }
-    const svgElement = document.createElement("svg");
-    svgElement.setAttribute("width", width);
-    svgElement.setAttribute("height", height);
-    svgElement.setAttribute("viewBox", this.viewBox);
 
-    const backgroundRectange = document.createElement("rect");
-    backgroundRectange.setAttribute("width", "100%");
-    backgroundRectange.setAttribute("height", "100%");
-    backgroundRectange.setAttribute("fill", "gray");
+    const xmlns = "http://www.w3.org/2000/svg";
+    const svgElement = document.createElementNS(xmlns, "svg");
+    svgElement.setAttributeNS(null, "width", width);
+    svgElement.setAttributeNS(null, "height", height);
+    svgElement.setAttributeNS(null, "viewBox", this.viewBox);
+
+    const backgroundRectange = document.createElementNS(xmlns, "rect");
+    backgroundRectange.setAttributeNS(null, "width", "100%");
+    backgroundRectange.setAttributeNS(null, "height", "100%");
+    backgroundRectange.setAttributeNS(null, "fill", "gray");
 
     svgElement.appendChild(backgroundRectange);
 
     this.paths.forEach(path => {
-      const pathElement = document.createElement("path");
-      pathElement.setAttribute("d", this.makeSvgPathFromPoints(path.points));
-      pathElement.setAttribute("fill", path.color);
+      const pathElement = document.createElementNS(xmlns, "path");
+      pathElement.setAttributeNS(
+        null,
+        "d",
+        this.makeSvgPathFromPoints(path.points)
+      );
+      pathElement.setAttributeNS(null, "fill", path.color);
 
       svgElement.appendChild(pathElement);
     });
@@ -685,7 +686,7 @@ export default ({
   /********** POSITIONS **********/
   /*******************************/
   getVoxelAt(position) {
-    return this.voxels.find(voxel => voxel.id === this.generateId(position));
+    return this.voxels.get(this.generateId(position));
   },
   getZIndex(position) {
     const { x, y, z } = position;
