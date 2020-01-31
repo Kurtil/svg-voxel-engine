@@ -72,6 +72,14 @@ export default {
     this.addVoxel({ x: this.size, y: 8, z: 3 }, "#0000FF");
     this.addVoxel({ x: this.size, y: 8, z: 4 }, "#0000FF");
     this.addVoxel({ x: this.size, y: 7, z: 4 }, "#0000FF");
+    this.addVoxel({ x: this.size + 1, y: 6, z: 4 }, "#FF0000");
+
+    this.addVoxel({ x: 10, y: 1, z: 2 }, "#0000FF");
+    this.addVoxel({ x: 9, y: 1, z: 2 }, "#0000FF");
+    this.addVoxel({ x: 9, y: 1, z: 3 }, "#0000FF");
+    this.addVoxel({ x: 9, y: 1, z: 4 }, "#0000FF");
+    this.addVoxel({ x: 10, y: 1, z: 4 }, "#0000FF");
+    this.addVoxel({ x: 11, y: 0, z: 4 }, "#FF0000");
 
     // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
     //   xSize: this.size,
