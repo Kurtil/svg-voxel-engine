@@ -316,7 +316,8 @@ export default {
       const pathPoints = [firstEdge.vertice1];
 
       let lastEdge = firstEdge;
-      let lastDirection = this.getEdgeDirection(lastEdge);
+      const firstDirection = this.getEdgeDirection(lastEdge);
+      let lastDirection = firstDirection;
       while (shellEdges.length) {
         const lastPoint = lastEdge.vertice2;
         const nextEdge = shellEdges.filter(
@@ -346,6 +347,11 @@ export default {
         lastDirection = direction;
         lastEdge = nextEdge;
         shellEdges = shellEdges.filter(shellEdge => shellEdge !== nextEdge);
+      }
+
+      // The first point may not be relevant
+      if (firstDirection === lastDirection) {
+        pathPoints.shift();
       }
 
       this.paths.push({
