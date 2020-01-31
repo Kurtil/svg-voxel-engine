@@ -321,7 +321,8 @@ export default {
               shellEdge.vertice2.y === lastPoint.y)
         )[0]; // TODO handle multi points
         if (!nextEdge) {
-          console.log("no next edge...");
+          // TODO no next edge, we should be in a hole
+          // SVG Specification : in the same path, the path clockwise is drawn, another anti-clockwise will be a hole
           break;
         }
         if (
