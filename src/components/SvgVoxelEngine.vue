@@ -67,6 +67,12 @@ export default {
       zSize: 4
     });
 
+    this.addVoxel({ x: this.size, y: 7, z: 2 }, "#0000FF");
+    this.addVoxel({ x: this.size, y: 8, z: 2 }, "#0000FF");
+    this.addVoxel({ x: this.size, y: 8, z: 3 }, "#0000FF");
+    this.addVoxel({ x: this.size, y: 8, z: 4 }, "#0000FF");
+    this.addVoxel({ x: this.size, y: 7, z: 4 }, "#0000FF");
+
     // this.addBox({ x: 1, y: 1, z: 1 }, "#0000FF", {
     //   xSize: this.size,
     //   ySize: this.size,
@@ -75,20 +81,27 @@ export default {
 
     // this.addVoxel({ x: 2, y: 2, z: 3 });
     // this.addVoxel({ x: 4, y: 4, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 5, y: 4, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 6, y: 4, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: 4, y: 5, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 5, y: 5, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 6, y: 5, z: 3 }, "#FFFF00");
-    // this.addVoxel({ x: 4, y: 6, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 5, y: 6, z: 3 }, "#FFFF00");
-    this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 4, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 4, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 5, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 5, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 7, y: 5, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 8, y: 5, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 5, y: 6, z: 2 }, "#FFFF00");
+    this.addVoxel({ x: 6, y: 6, z: 2 }, "#FFFF00");
     // this.addVoxel({ x: 6, y: 6, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: 1, y: 1, z: 4 }, "#FFFF00");
     // this.addVoxel({ x: this.size, y: this.size, z: 3 }, "#FFFF00");
     // this.addVoxel({ x: this.size, y: this.size, z: 4 }, "#FFFF00");
-    // this.addVoxel({ x: 6, y: 6, z: 3 }, "#0000FF");
+    this.addVoxel({ x: 1, y: 1, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 1, y: 2, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 1, y: 3, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 2, y: 3, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 3, y: 3, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 3, y: 2, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 3, y: 1, z: 2 }, "#00FFFF");
+    this.addVoxel({ x: 2, y: 1, z: 2 }, "#00FFFF");
 
     // this.addVoxel({ x: this.size - 2, y: this.size - 2, z: 3 }, "#FF00FF");
     // this.addVoxel({ x: this.size - 3, y: this.size - 3, z: 3 }, "#FFFF00");
@@ -253,10 +266,12 @@ export default {
         }
       });
       this.paths = [];
-      console.log(colorChunks);
       [...colorChunks.entries()].forEach(([id, chunk]) => {
         this.mergePaths(chunk, id);
       });
+      this.paths.sort((path1, path2) =>
+        path1.length > path2.length ? -1 : path1.length < path2.length ? 1 : 0
+      );
     },
     mergePaths(paths, id) {
       const color = paths[0].color;
@@ -339,6 +354,7 @@ export default {
       }
 
       this.paths.push({
+        length: shellEdges.length,
         id,
         color,
         points: pathPoints.map(pathPoint => pathPoint.p)
