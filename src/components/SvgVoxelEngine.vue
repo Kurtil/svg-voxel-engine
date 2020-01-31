@@ -1,6 +1,4 @@
 <script>
-/* eslint-disable */
-
 import { lightenColor, hueShift } from "../utils/colors.js";
 
 export default {
@@ -133,16 +131,6 @@ export default {
                 // TODO for testing purpose
                 click: () => {
                   this.paths = this.paths.filter(p => p !== path);
-                  console.log(`Global index : ${path.globalGridIndex}`);
-                  console.log(
-                    `Top face X : ${path.topFaceX} - Top face Y : ${path.topFaceY}`
-                  );
-                  // console.log(`Path key : ${path.shellKey}`);
-                  // console.log(
-                  //   `Neigbhor of ${
-                  //     path.globalGridIndex
-                  //   } : ${this.getGlobalGridIndexes(path.globalGridIndex)}`
-                  // );
                 }
               }
             })
@@ -196,7 +184,6 @@ export default {
         }
         // add path top face x and y coordinate and global grid index
         const { x: px, y: py, z: pz } = path.voxel.position;
-        let face = null;
 
         const zDiff = this.maxZ - pz;
 
@@ -218,7 +205,6 @@ export default {
         path.topFaceY = y;
         path.globalGridIndex =
           (this.size + this.maxZ) * 2 * (x + this.maxZ - 1) + y;
-        // path.shellKey = `g-index-x-${x + this.maxZ}-y-${y}` // for development only
       });
       const globalGrid = new Map();
       this.paths.forEach(path => globalGrid.set(path.globalGridIndex, path));
@@ -265,15 +251,7 @@ export default {
     },
     mergePaths(paths, id) {
       const color = paths[0].color;
-      // TODO from points to edges
-      // Edges should be in top face coordinate
       const edges = paths.flatMap(path => this.getEdgesFromPathPoints(path));
-      // console.log(
-      //   edges.map(
-      //     edge =>
-      //       `v1-x-${edge.vertice1.x}-y-${edge.vertice1.y} --- v2-x-${edge.vertice2.x}-y-${edge.vertice2.y}`
-      //   )
-      // );
 
       // Duplicated edges are chunk inner edges and are not relevant to the shell path
       const shellPathEdges = new Map();
@@ -299,9 +277,6 @@ export default {
         acc.path.globalGridIndex > cur.path.globalGridIndex ? acc : cur
       );
       shellEdges = shellEdges.filter(shellEdge => shellEdge !== firstEdge);
-      // Rotate clockwise and merge paths points by points
-      // TODO hole will be difficult to handle
-      // TODO linear line should be only two points
 
       // Check if firstEdge is in the good direction
       if (
@@ -361,6 +336,11 @@ export default {
         points: pathPoints.map(pathPoint => pathPoint.p)
       });
     },
+    /**
+     * Returns the direction of the edge.
+     * There is only three directions possible :
+     * -1, 0 or 1
+     */
     getEdgeDirection(edge) {
       const {
         vertice1: { x: x1, y: y1 },
@@ -368,9 +348,11 @@ export default {
       } = edge;
       const dx = Math.abs(x1 - x2);
       const dy = Math.abs(y1 - y2);
-      // only three direction possible -1, 0, 1
       return dx - dy;
     },
+    /**
+     * Returns edges from path. Edges are in top face coordinate.
+     */
     getEdgesFromPathPoints(path) {
       const {
         topFaceX: x,
@@ -572,15 +554,16 @@ export default {
           shellKey: this.getShellKey(voxel, orientation, 2),
           faceIndex: 2
         };
-        const getFaceColor = face => {
-          if (face.match(/f-t/)) {
-            return "#FF0000";
-          } else if (face.match(/f-l/)) {
-            return "#00FF00";
-          } else if (face.match(/f-r/)) {
-            return "#0000FF";
-          }
-        };
+        // // TODO - To debug top, right and left face coordinates
+        // const getFaceColor = face => {
+        //   if (face.match(/f-t/)) {
+        //     return "#FF0000";
+        //   } else if (face.match(/f-l/)) {
+        //     return "#00FF00";
+        //   } else if (face.match(/f-r/)) {
+        //     return "#0000FF";
+        //   }
+        // };
         // firstPath.color = getFaceColor(firstPath.shellKey) || firstPath.color;
         // secondPath.color =
         //   getFaceColor(secondPath.shellKey) || secondPath.color;
@@ -588,19 +571,6 @@ export default {
         this.paths.push(firstPath, secondPath);
       });
     },
-    /**
-     * After tri face render.
-     */
-    // optiTest() {
-    //   // Only displayed paths will be kept.
-    //   const shellPaths = new Map();
-    //   [...this.voxels.values()].forEach(voxel => {
-    //     Object.entries(voxel.faces).forEach(([orientation, paths]) => {
-    //       shellPaths.set(this.getShellKey(voxel, orientation, 1), paths[0]);
-    //       shellPaths.set(this.getShellKey(voxel, orientation, 2), paths[1]);
-    //     });
-    //   });
-    // },
     getShellKey(voxel, orientation, faceIndex) {
       const { x: px, y: py, z: pz } = voxel.position;
       let face = null;
@@ -629,13 +599,7 @@ export default {
         py > this.size - px + orientationX2Offset
       ) {
         face = "r";
-        x = this.getShellRightFaceXCoordinate(
-          px,
-          py,
-          orientation,
-          faceIndex,
-          zDiff
-        );
+        x = this.getShellRightFaceXCoordinate(px, py, orientation, faceIndex);
         y = this.getShellRightFaceYCoordinate(
           px,
           py,
@@ -706,7 +670,7 @@ export default {
       }
       return offset + (px + zDiff) * 2;
     },
-    getShellRightFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
+    getShellRightFaceXCoordinate(px, py, orientation, faceIndex) {
       let offset =
         orientation === "left" || (orientation === "top" && faceIndex === 1)
           ? -1
