@@ -39,11 +39,15 @@ export default ({
   voxelYSize: depthRatio * (width / (voxelOffset * 2 + size)), // depthRatio * voxelXSize
   offset: (width / size) * voxelOffset,
   lightCfg,
+  _maxZ: null,
   getMaxZ() {
-    return [...this.voxels.values()].reduce(
-      (acc, voxel) => (voxel.position.z > acc ? voxel.position.z : acc),
-      0
-    );
+    if (!this._maxZ) {
+      this._maxZ = [...this.voxels.values()].reduce(
+        (acc, voxel) => (voxel.position.z > acc ? voxel.position.z : acc),
+        0
+      );
+    }
+    return this._maxZ;
   },
   /**
    * the offset lenght on svg-x axis
