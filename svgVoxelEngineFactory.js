@@ -701,24 +701,33 @@ export default ({
   /****************************/
   /********** COLORS **********/
   /****************************/
+  faceColors: new Map(),
   /**
    * Lighten or darken face sepending on light configuration
    */
   makeFaceColor(face, color) {
-    const {
-      light = 10,
-      lightFace = "top",
-      lightHue = 5,
-      shadow = 30,
-      shadowFace = "right",
-      shadowHue = 20
-    } = this.lightCfg;
-    if (face === lightFace) {
-      return this.lightenColor(hueShift(color, lightHue), light);
-    } else if (face === shadowFace) {
-      return this.darkenColor(hueShift(color, shadowHue), shadow);
+    let colorToReturn = this.faceColors.get(face + color);
+    if (colorToReturn) {
+      return colorToReturn;
     } else {
-      return color;
+      const {
+        light = 10,
+        lightFace = "top",
+        lightHue = 5,
+        shadow = 30,
+        shadowFace = "right",
+        shadowHue = 20
+      } = this.lightCfg;
+      let c = null;
+      if (face === lightFace) {
+        c = this.lightenColor(hueShift(color, lightHue), light);
+      } else if (face === shadowFace) {
+        c = this.darkenColor(hueShift(color, shadowHue), shadow);
+      } else {
+        c = color;
+      }
+      this.faceColors.set(face + color, c);
+      return c;
     }
   },
   darkenColor(color, amount) {
