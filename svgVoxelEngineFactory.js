@@ -101,10 +101,10 @@ export default ({
         pathsToChunk.push(path);
         let pathToChunk = null;
         while ((pathToChunk = pathsToChunk.pop())) {
-          if (colorChunks.has(`${groupId}-${color}`)) {
-            colorChunks.get(`${groupId}-${color}`).push(pathToChunk);
+          if (colorChunks.has(groupId + color)) {
+            colorChunks.get(groupId + color).push(pathToChunk);
           } else {
-            colorChunks.set(`${groupId}-${color}`, [pathToChunk]);
+            colorChunks.set(groupId + color, [pathToChunk]);
           }
 
           const neighbors = this.getGlobalGridNeighbor(
@@ -141,13 +141,13 @@ export default ({
         vertice2: { x: x2, y: y2 }
       } = edge;
       if (
-        shellPathEdges.has(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`) ||
-        shellPathEdges.has(`x1-${x2}-y1-${y2}-x2-${x1}-y2-${y1}`)
+        shellPathEdges.has(`x1${x1}y1${y1}x2${x2}y2${y2}`) ||
+        shellPathEdges.has(`x1${x2}y1${y2}x2${x1}y2${y1}`)
       ) {
-        shellPathEdges.delete(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`);
-        shellPathEdges.delete(`x1-${x2}-y1-${y2}-x2-${x1}-y2-${y1}`);
+        shellPathEdges.delete(`x1${x1}y1${y1}x2${x2}y2${y2}`);
+        shellPathEdges.delete(`x1${x2}y1${y2}x2${x1}y2${y1}`);
       } else {
-        shellPathEdges.set(`x1-${x1}-y1-${y1}-x2-${x2}-y2-${y2}`, edge);
+        shellPathEdges.set(`x1${x1}y1${y1}x2${x2}y2${y2}`, edge);
       }
     });
 
@@ -538,7 +538,7 @@ export default ({
       );
     }
 
-    return `f-${face}-x-${x}-y-${y}`;
+    return `f${face}x${x}y${y}`;
   },
   getShellTopFaceXCoordinate(px, py, orientation, faceIndex, zDiff) {
     let offset =
