@@ -93,30 +93,31 @@ export default ({
       if (!paths.length) return;
       const globalGridColor = new Map();
       paths.forEach(path => globalGridColor.set(path.globalGridIndex, path));
-      const getPathNeighborsAndDeleteThem = (path, groupId) => {
-        if (colorChunks.has(`${groupId}-${color}`)) {
-          colorChunks.get(`${groupId}-${color}`).push(path);
-        } else {
-          colorChunks.set(`${groupId}-${color}`, [path]);
-        }
 
-        const neighbors = this.getGlobalGridNeighbor(
-          globalGridColor,
-          path.globalGridIndex
-        );
-
-        neighbors.forEach(neighbor => {
-          globalGridColor.delete(neighbor.globalGridIndex);
-        });
-
-        neighbors.forEach(neighbor => {
-          getPathNeighborsAndDeleteThem(neighbor, groupId);
-        });
-      };
       let groupId = 1;
       for (let path of globalGridColor.values()) {
         globalGridColor.delete(path.globalGridIndex);
-        getPathNeighborsAndDeleteThem(path, groupId);
+        const pathsToChunk = [];
+        pathsToChunk.push(path);
+        let pathToChunk = null;
+        while ((pathToChunk = pathsToChunk.pop())) {
+          if (colorChunks.has(`${groupId}-${color}`)) {
+            colorChunks.get(`${groupId}-${color}`).push(pathToChunk);
+          } else {
+            colorChunks.set(`${groupId}-${color}`, [pathToChunk]);
+          }
+
+          const neighbors = this.getGlobalGridNeighbor(
+            globalGridColor,
+            pathToChunk.globalGridIndex
+          );
+
+          neighbors.forEach(neighbor => {
+            globalGridColor.delete(neighbor.globalGridIndex);
+          });
+
+          pathsToChunk.push(...neighbors.filter(Boolean));
+        }
         groupId++;
       }
     });
