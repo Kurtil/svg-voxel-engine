@@ -805,6 +805,10 @@ export default ({
   }
 });
 
+/**************************************/
+/************ COLORS UTILS ************/
+/**************************************/
+
 /**
  * From https://gist.github.com/renancouto/4675192
  */
@@ -882,10 +886,6 @@ function rgbToHSL(rgb) {
 
   return { h, s, l };
 }
-
-/**************************************/
-/************ COLORS UTILS ************/
-/**************************************/
 
 // expects an object and returns a string
 function hslToRGB(hsl) {
