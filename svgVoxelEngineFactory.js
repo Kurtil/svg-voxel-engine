@@ -821,7 +821,7 @@ export default ({
 /**
  * From https://gist.github.com/renancouto/4675192
  */
-function lightenColor(color, percent) {
+export function lightenColor(color, percent) {
   const num = parseInt(color.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = (num >> 16) + amt;
@@ -846,7 +846,7 @@ function lightenColor(color, percent) {
  * and changes it back to RGB/HEX.
  */
 
-function hueShift(color, degree) {
+export function hueShift(color, degree) {
   let hsl = rgbToHSL(color);
   hsl.h += degree;
   if (hsl.h > 360) {
