@@ -382,6 +382,14 @@ export default ({
     this.voxels.set(voxel.id, voxel);
     return voxel;
   },
+  clear() {
+    const svg = document.getElementById("svg-voxel-zone");
+    if (svg) {
+      svg.remove();
+    }
+    this.voxels = new Map();
+    this.paths = [];
+  },
   /*******************************/
   /********** RENDERING **********/
   /*******************************/
@@ -403,6 +411,7 @@ export default ({
     svgElement.setAttributeNS(null, "width", width);
     svgElement.setAttributeNS(null, "height", height);
     svgElement.setAttributeNS(null, "viewBox", this.viewBox);
+    svgElement.setAttributeNS(null, 'id', 'svg-voxel-zone');
 
     const backgroundRectange = document.createElementNS(xmlns, "rect");
     backgroundRectange.setAttributeNS(null, "width", "100%");
